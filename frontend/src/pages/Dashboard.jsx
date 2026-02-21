@@ -2,10 +2,8 @@ import { useState } from "react";
 import Navbar from "../components/Navbar";
 import UploadPage from "../components/UploadPage";
 import SearchPage from "../components/SearchPage";
-
-// placeholder pages for now
-const StoragePage = () => <div className="p-6">Storage Page</div>;
-const MetricsPage = () => <div className="p-6">Metrics Page</div>;
+import StoragePage from "../components/StoragePage";
+import MetricsPage from "../components/MetricsPage";
 
 export default function Dashboard({ role, logout }) {
   const [activeTab, setActiveTab] = useState("upload");
