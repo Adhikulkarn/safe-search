@@ -294,3 +294,77 @@ class ExternalSearchView(APIView):
             ),
             status=status.HTTP_200_OK
         )
+
+class RotateAuditorKeyView(APIView):
+
+    def post(self, request):
+        auditor_id = request.data.get("auditor_id")
+        new_public_key = request.data.get("new_public_key")
+
+        if not auditor_id or not new_public_key:
+            return Response(
+                error_response("MISSING_FIELDS", "auditor_id and new_public_key required"),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            auditor = Auditor.objects.get(id=auditor_id)
+        except Auditor.DoesNotExist:
+            return Response(
+                error_response("AUDITOR_NOT_FOUND", "Auditor not found"),
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Simulated key version increment
+        current_version = getattr(auditor, "key_version", 1)
+        auditor.public_key = new_public_key
+        auditor.key_version = current_version + 1
+        auditor.save()
+
+        return Response(
+            success_response(
+                data={
+                    "auditor_id": auditor.id,
+                    "new_key_version": auditor.key_version
+                }
+            ),
+            status=status.HTTP_200_OK
+        )
+    
+class AuditorLogsView(APIView):
+
+    def get(self, request, auditor_id):
+
+        try:
+            auditor = Auditor.objects.get(id=auditor_id)
+        except Auditor.DoesNotExist:
+            return Response(
+                error_response("AUDITOR_NOT_FOUND", "Auditor not found"),
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        logs = ExternalSearchAudit.objects.filter(
+            auditor=auditor
+        )[:100]
+
+        data = [
+            {
+                "id": log.id,
+                "keyword_hash": log.keyword_hash,
+                "success": log.success,
+                "total_matches": log.total_matches,
+                "returned_count": log.returned_count,
+                "execution_time_ms": log.execution_time_ms,
+                "created_at": log.created_at,
+                "key_version": getattr(log, "key_version", 1)
+            }
+            for log in logs
+        ]
+
+        return Response(
+            success_response(
+                data={"logs": data}
+            ),
+            status=status.HTTP_200_OK
+        )
+    
