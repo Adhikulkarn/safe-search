@@ -29,7 +29,7 @@ export default function Navbar({ activeTab, setActiveTab, role, logout }) {
                 Upload
               </button>
 
-              <button
+              {/* <button
                 onClick={() => setActiveTab("storage")}
                 className={`px-3 py-1 rounded ${
                   activeTab === "storage"
@@ -38,7 +38,7 @@ export default function Navbar({ activeTab, setActiveTab, role, logout }) {
                 }`}
               >
                 Storage
-              </button>
+              </button> */}
             </>
           )}
 

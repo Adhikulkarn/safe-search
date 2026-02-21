@@ -2,7 +2,7 @@ import { useState } from "react";
 import Navbar from "../components/Navbar";
 import UploadPage from "../components/UploadPage";
 import SearchPage from "../components/SearchPage";
-import StoragePage from "../components/StoragePage";
+// import StoragePage from "../components/StoragePage";
 import MetricsPage from "../components/MetricsPage";
 
 export default function Dashboard({ role, auditor, privateKey, logout }) {
@@ -35,7 +35,7 @@ export default function Dashboard({ role, auditor, privateKey, logout }) {
       )}
 
       {/* Internal Storage */}
-      {activeTab === "storage" && isInternal && <StoragePage />}
+      {/* {activeTab === "storage" && isInternal && <StoragePage />} */}
 
       {/* Metrics */}
       {activeTab === "metrics" && (
