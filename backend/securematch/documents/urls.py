@@ -1,6 +1,7 @@
 from django.urls import path
-from .views import upload_document
+from .views import UploadDocumentView, InternalSearchView
 
 urlpatterns = [
-    path("upload/", upload_document),
+    path("upload/", UploadDocumentView.as_view()),
+    path("search/internal/", InternalSearchView.as_view()),
 ]
