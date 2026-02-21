@@ -6,7 +6,7 @@ from cryptography.exceptions import InvalidSignature
 
 
 # --------------------------------------------------
-# 🔑 Key Generation
+# Key Generation
 # --------------------------------------------------
 
 def generate_keypair():
@@ -38,7 +38,7 @@ def generate_keypair():
 
 
 # --------------------------------------------------
-# 🔎 Deterministic Keyword Hash
+# Deterministic Keyword Hash
 # --------------------------------------------------
 
 def hash_keyword(value: str) -> str:
@@ -51,7 +51,7 @@ def hash_keyword(value: str) -> str:
 
 
 # --------------------------------------------------
-# 🔐 Generate Trapdoor (Private Key Side)
+# Generate Trapdoor (Private Key Side)
 # --------------------------------------------------
 
 def generate_trapdoor_private(value: str, private_pem: str):
@@ -82,7 +82,7 @@ def generate_trapdoor_private(value: str, private_pem: str):
 
 
 # --------------------------------------------------
-# ✅ Verify Trapdoor (Public Key Side)
+# Verify Trapdoor (Public Key Side)
 # --------------------------------------------------
 
 def verify_signature(keyword_hash: str, signature_hex: str, public_pem: str) -> bool:

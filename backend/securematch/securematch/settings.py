@@ -45,7 +45,6 @@ INSTALLED_APPS = [
 
     "crypto_engine",
     "documents",
-    "search",
 ]
 
 MIDDLEWARE = [

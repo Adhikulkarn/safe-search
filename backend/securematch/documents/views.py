@@ -31,7 +31,7 @@ MAX_INTERNAL_RESULTS = 50
 
 
 # ---------------------------------------------------
-# 📂 Upload & Index
+#  Upload & Index
 # ---------------------------------------------------
 
 class UploadDocumentView(APIView):
@@ -85,7 +85,7 @@ class UploadDocumentView(APIView):
 
 
 # ---------------------------------------------------
-# 🔎 Internal Secure Search (SSE)
+#  Internal Secure Search (SSE)
 # ---------------------------------------------------
 
 class InternalSearchView(APIView):
@@ -172,7 +172,7 @@ class InternalSearchView(APIView):
 
 
 # ---------------------------------------------------
-# 🔑 External Public-Key Search (Hardened)
+#  External Public-Key Search (Hardened)
 # ---------------------------------------------------
 
 class ExternalSearchView(APIView):
@@ -198,7 +198,7 @@ class ExternalSearchView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # 🔐 Signature Verification
+        # Signature Verification
         verify_start = time.perf_counter()
         is_valid = verify_signature(
             keyword_hash,
@@ -226,7 +226,7 @@ class ExternalSearchView(APIView):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # 📊 Fetch Matches
+        # Fetch Matches
         matches = SearchTokenIndex.objects.filter(
             external_token=keyword_hash
         ).select_related("document")
@@ -242,7 +242,7 @@ class ExternalSearchView(APIView):
             for m in limited_matches
         ]
 
-        # 🔒 RESULT PADDING (Fixed Size)
+        # RESULT PADDING (Fixed Size)
         if len(encrypted_results) < MAX_EXTERNAL_RESULTS:
             padding_needed = MAX_EXTERNAL_RESULTS - len(encrypted_results)
 
@@ -255,7 +255,7 @@ class ExternalSearchView(APIView):
 
         total_time = (time.perf_counter() - total_start) * 1000
 
-        # 📈 Frequency Monitoring
+        # Frequency Monitoring
         one_hour_ago = timezone.now() - timedelta(hours=1)
 
         recent_search_count = ExternalSearchAudit.objects.filter(
@@ -263,7 +263,7 @@ class ExternalSearchView(APIView):
             created_at__gte=one_hour_ago
         ).count()
 
-        # 📜 Audit Log
+        # Audit Log
         audit_entry = ExternalSearchAudit.objects.create(
             auditor=auditor,
             keyword_hash=keyword_hash,

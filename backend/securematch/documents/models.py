@@ -2,7 +2,7 @@ from django.db import models
 
 
 # ---------------------------------------------------
-# 🔐 Encrypted Document Storage
+# Encrypted Document Storage
 # ---------------------------------------------------
 
 class EncryptedDocument(models.Model):
@@ -17,7 +17,7 @@ class EncryptedDocument(models.Model):
 
 
 # ---------------------------------------------------
-# 🔎 Search Token Index (Dual Index: SSE + External)
+# Search Token Index (Dual Index: SSE + External)
 # ---------------------------------------------------
 
 class SearchTokenIndex(models.Model):
@@ -47,7 +47,7 @@ class SearchTokenIndex(models.Model):
 
 
 # ---------------------------------------------------
-# 👤 Auditor (Public Key + Key Lifecycle)
+# Auditor (Public Key + Key Lifecycle)
 # ---------------------------------------------------
 
 class Auditor(models.Model):
@@ -67,7 +67,7 @@ class Auditor(models.Model):
 
 
 # ---------------------------------------------------
-# 📜 External Search Audit Log
+# External Search Audit Log
 # ---------------------------------------------------
 
 class ExternalSearchAudit(models.Model):
@@ -85,7 +85,7 @@ class ExternalSearchAudit(models.Model):
 
     execution_time_ms = models.FloatField()
 
-    # 🔐 Security Tracking
+    # Security Tracking
     success = models.BooleanField(default=True)
 
     failure_reason = models.CharField(
@@ -94,10 +94,10 @@ class ExternalSearchAudit(models.Model):
         blank=True
     )
 
-    # 🔁 Track Key Version Used During Search
+    # Track Key Version Used During Search
     key_version = models.IntegerField(default=1)
 
-    # 🌍 Optional Metadata
+    # Optional Metadata
     ip_address = models.GenericIPAddressField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
