@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.throttling import ScopedRateThrottle
 
+from crypto_engine.peks import hash_keyword, verify_signature
 from crypto_engine.sse import (
     encrypt_document,
     generate_token,
@@ -11,8 +12,17 @@ from crypto_engine.sse import (
     decrypt_document
 )
 
-from .models import EncryptedDocument, SearchTokenIndex
+from documents.models import (
+    Auditor,
+    EncryptedDocument,
+    SearchTokenIndex,
+    ExternalSearchAudit
+)
+
 from .constants import SEARCHABLE_FIELDS
+
+
+MAX_EXTERNAL_RESULTS = 50
 
 
 # ---------------------------------------------------
@@ -33,14 +43,12 @@ class UploadDocumentView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # 1️⃣ Encrypt entire record
             encrypted_blob = encrypt_document(data)
 
             doc = EncryptedDocument.objects.create(
                 encrypted_blob=encrypted_blob
             )
 
-            # 2️⃣ Controlled field tokenization
             for field in SEARCHABLE_FIELDS:
                 if field in data and data[field] is not None:
 
@@ -49,9 +57,11 @@ class UploadDocumentView(APIView):
                         continue
 
                     token = generate_token(field, value)
+                    external_token = hash_keyword(value)
 
                     SearchTokenIndex.objects.create(
                         token=token,
+                        external_token=external_token,
                         document=doc
                     )
 
@@ -88,7 +98,6 @@ class InternalSearchView(APIView):
             start_time = time.time()
             matching_doc_ids = None
 
-            # 1️⃣ Generate trapdoors + intersect IDs
             for field, value in query_data.items():
                 trapdoor = generate_trapdoor(field, str(value))
 
@@ -116,9 +125,7 @@ class InternalSearchView(APIView):
                     status=status.HTTP_200_OK
                 )
 
-            # 2️⃣ Apply hard cap
             MAX_RESULTS = 50
-
             total_matches = len(matching_doc_ids)
             truncated = total_matches > MAX_RESULTS
 
@@ -128,7 +135,6 @@ class InternalSearchView(APIView):
                 id__in=limited_ids
             )
 
-            # 3️⃣ Decrypt only limited results
             results = [
                 decrypt_document(doc.encrypted_blob)
                 for doc in encrypted_docs
@@ -152,3 +158,104 @@ class InternalSearchView(APIView):
                 {"error": "Search failed"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+# ---------------------------------------------------
+# 🔑 PHASE 4 — External Public-Key Search
+# ---------------------------------------------------
+
+class ExternalSearchView(APIView):
+
+    def post(self, request):
+        total_start = time.perf_counter()
+
+        auditor_id = request.data.get("auditor_id")
+        keyword_hash = request.data.get("keyword_hash")
+        signature = request.data.get("signature")
+
+        if not auditor_id or not keyword_hash or not signature:
+            return Response(
+                {"error": "Missing required fields"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            auditor = Auditor.objects.get(id=auditor_id)
+        except Auditor.DoesNotExist:
+            return Response(
+                {"error": "Auditor not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # 🔐 Signature verification
+        verify_start = time.perf_counter()
+        is_valid = verify_signature(
+            keyword_hash,
+            signature,
+            auditor.public_key
+        )
+        verify_time = (time.perf_counter() - verify_start) * 1000
+
+        if not is_valid:
+            # 🔎 Log failed attempt
+            ExternalSearchAudit.objects.create(
+                auditor=auditor,
+                keyword_hash=keyword_hash,
+                total_matches=0,
+                returned_count=0,
+                truncated=False,
+                execution_time_ms=round(
+                    (time.perf_counter() - total_start) * 1000, 2
+                ),
+                success=False
+            )
+
+            return Response(
+                {"error": "Invalid signature"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # 🗄 Fetch matches
+        matches = SearchTokenIndex.objects.filter(
+            external_token=keyword_hash
+        ).select_related("document")
+
+        total_matches = matches.count()
+        limited_matches = matches[:MAX_EXTERNAL_RESULTS]
+
+        encrypted_results = [
+            {
+                "nonce": m.document.encrypted_blob["nonce"],
+                "ciphertext": m.document.encrypted_blob["ciphertext"]
+            }
+            for m in limited_matches
+        ]
+
+        total_time = (time.perf_counter() - total_start) * 1000
+
+        # 📜 Log successful search
+        audit_entry = ExternalSearchAudit.objects.create(
+            auditor=auditor,
+            keyword_hash=keyword_hash,
+            total_matches=total_matches,
+            returned_count=len(encrypted_results),
+            truncated=total_matches > MAX_EXTERNAL_RESULTS,
+            execution_time_ms=round(total_time, 2),
+            success=True
+        )
+
+        return Response({
+            "results": encrypted_results,
+            "total_matches": total_matches,
+            "returned_count": len(encrypted_results),
+            "truncated": total_matches > MAX_EXTERNAL_RESULTS,
+            "performance": {
+                "signature_verification_ms": round(verify_time, 2),
+                "total_execution_ms": round(total_time, 2)
+            },
+            "audit": {
+                "log_id": audit_entry.id,
+                "timestamp": audit_entry.created_at,
+                "success": audit_entry.success
+            }
+        })
