@@ -1,122 +1,181 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
+
 export default function MetricsPage({ role }) {
-  const isInternal = role === "internal";
+
+  const resolvedRole = role?.toLowerCase() || "internal";
+  const isInternal = resolvedRole === "internal";
+
+  const [metrics, setMetrics] = useState({});
+  const [systemMetrics, setSystemMetrics] = useState({});
+  const [auditors, setAuditors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        setLoading(true);
+
+        const endpoint =
+          resolvedRole === "internal"
+            ? "http://127.0.0.1:8000/api/metrics/internal/"
+            : "http://127.0.0.1:8000/api/metrics/external/";
+
+        const res = await axios.get(endpoint);
+
+        const data = res.data?.data || {};
+
+        setMetrics(data);
+        setSystemMetrics(data.system_metrics || {});
+        setAuditors(data.auditors || []);
+
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load metrics");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMetrics();
+  }, [resolvedRole]);
+
+  if (loading) return <div className="p-6">Loading metrics...</div>;
+  if (error) return <div className="p-6 text-red-600">{error}</div>;
+
+  const safe = (val, fallback = 0) =>
+    val !== undefined && val !== null ? val : fallback;
+
+  const safeDate = (date) =>
+    date ? new Date(date).toLocaleString() : "No data";
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-6">
-      {/* HEADER */}
+
       <h1 className="text-2xl font-semibold mb-1">System Metrics</h1>
       <p className="text-gray-500 mb-6">
-        Performance and operational statistics
+        Real-time performance and security analytics
       </p>
 
       {/* TOP STATS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white border rounded-xl p-5">
-          <p className="text-gray-500 text-sm">Total Documents</p>
-          <p className="text-2xl font-semibold">3</p>
-        </div>
 
-        <div className="bg-white border rounded-xl p-5">
-          <p className="text-gray-500 text-sm">Index Size</p>
-          <p className="text-2xl font-semibold">7.2 KB</p>
-        </div>
+        <StatCard
+          label="Total Documents"
+          value={safe(systemMetrics.total_documents)}
+        />
 
-        <div className="bg-white border rounded-xl p-5">
-          <p className="text-gray-500 text-sm">Avg Search Time</p>
-          <p className="text-2xl font-semibold">
-            {isInternal ? "41.9ms" : "31.6ms"}
-          </p>
-        </div>
+        <StatCard
+          label="Total Tokens"
+          value={safe(systemMetrics.total_tokens)}
+        />
 
-        <div className="bg-white border rounded-xl p-5">
-          <p className="text-gray-500 text-sm">Encryption</p>
-          <p className="text-2xl font-semibold">AES-256-GCM</p>
-        </div>
+        {isInternal && (
+          <StatCard
+            label="Avg External Search"
+            value={`${safe(systemMetrics.avg_external_search_ms)} ms`}
+          />
+        )}
+
+        <StatCard
+          label="External Searches (24h)"
+          value={safe(systemMetrics.external_searches_last_24h)}
+        />
       </div>
 
-      {/* TWO COLUMN SECTION */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* SYSTEM INFO */}
-        <div className="bg-white border rounded-xl p-6">
-          <h3 className="font-semibold mb-4">System Information</h3>
+      {/* AUDITOR KEY OVERVIEW */}
+      {isInternal && (
+        <div className="bg-white border rounded-xl p-6 mb-6">
+          <h3 className="font-semibold mb-4">Auditor Key Overview</h3>
 
-          <div className="space-y-3 text-sm">
-            <Row label="Encryption Standard" value="AES-256-GCM" />
-            <Row label="Index Type" value="Inverted" />
-            <Row label="Search Protocol" value={isInternal ? "SSE" : "PEKS"} />
-            <Row label="HMAC Algorithm" value="SHA-256" />
-            <Row label="Last Index Update" value="2/21/2026, 3:56 PM" />
+          {auditors.length === 0 ? (
+            <p className="text-gray-500 text-sm">No auditors registered.</p>
+          ) : (
+            <div className="space-y-3">
+              {auditors.map((auditor) => (
+                <div
+                  key={auditor.auditor_id}
+                  className="flex justify-between border-b py-2 text-sm"
+                >
+                  <span className="text-gray-600">
+                    {auditor.name} (ID: {auditor.auditor_id})
+                  </span>
+                  <span className="font-medium">
+                    Active Key v{safe(auditor.active_key_version, 1)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* SECURITY SECTION */}
+      {isInternal && (
+        <div className="bg-white border rounded-xl p-6 mb-6">
+          <h3 className="font-semibold mb-4">Security Overview</h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+
+            <MetricBox
+              label="Failed Signature Verifications (24h)"
+              value={safe(systemMetrics.failed_external_searches_last_24h)}
+              danger={safe(systemMetrics.failed_external_searches_last_24h) > 0}
+            />
+
+            <MetricBox
+              label="External Token Entries"
+              value={safe(systemMetrics.external_tokens)}
+            />
+
+            <MetricBox
+              label="Avg External Search Time"
+              value={`${safe(systemMetrics.avg_external_search_ms)} ms`}
+            />
           </div>
         </div>
+      )}
 
-        {/* ACCESS LEVEL */}
-        <div
-          className={`border rounded-xl p-6 ${
-            isInternal
-              ? "bg-blue-50 border-blue-200"
-              : "bg-yellow-50 border-yellow-200"
-          }`}
-        >
-          <h3 className="font-semibold mb-2">Access Level</h3>
-          <p className="text-sm mb-4 text-gray-600">
-            Current role permissions and capabilities
-          </p>
+      {/* INDEX HEALTH */}
+      <div className="bg-white border rounded-xl p-6">
+        <h3 className="font-semibold mb-4">Index Health</h3>
 
-          <div className="mb-4">
-            <p className="font-semibold">
-              {isInternal ? "Internal Analyst" : "External Auditor"}
-            </p>
-            <p className="text-sm text-gray-500">
-              {isInternal ? "Full System Access" : "Limited Read Access"}
-            </p>
-          </div>
-
-          <ul className="space-y-2 text-sm">
-            {isInternal ? (
-              <>
-                <li className="text-green-600">● Upload encrypted documents</li>
-                <li className="text-green-600">● View encrypted storage</li>
-                <li className="text-green-600">● Search with decryption</li>
-                <li className="text-green-600">● Access all metrics</li>
-              </>
-            ) : (
-              <>
-                <li className="text-gray-400">● Upload encrypted documents</li>
-                <li className="text-gray-400">● View encrypted storage</li>
-                <li className="text-yellow-700">
-                  ● Search without decryption (PEKS)
-                </li>
-                <li className="text-yellow-700">● Limited metrics</li>
-              </>
-            )}
-          </ul>
-        </div>
-      </div>
-
-      {/* PERFORMANCE */}
-      <div className="bg-white border rounded-xl p-6 mt-6">
-        <h3 className="font-semibold mb-1">Performance Overview</h3>
-        <p className="text-gray-500 text-sm mb-6">
-          System efficiency and search latency metrics
-        </p>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 text-center gap-4">
-          <div>
-            <p className="text-green-600 text-2xl font-semibold">99.8%</p>
-            <p className="text-gray-500 text-sm">Uptime</p>
-          </div>
-
-          <div>
-            <p className="text-blue-600 text-2xl font-semibold">41.9ms</p>
-            <p className="text-gray-500 text-sm">Avg Search</p>
-          </div>
-
-          <div>
-            <p className="text-purple-600 text-2xl font-semibold">100%</p>
-            <p className="text-gray-500 text-sm">Security</p>
-          </div>
+        <div className="space-y-3 text-sm">
+          <Row
+            label="Last Index Update"
+            value={safeDate(systemMetrics.last_index_update)}
+          />
+          <Row
+            label="Total Token Entries"
+            value={safe(systemMetrics.total_tokens)}
+          />
+          <Row
+            label="External Token Entries"
+            value={safe(systemMetrics.external_tokens)}
+          />
         </div>
       </div>
+    </div>
+  );
+}
+
+function StatCard({ label, value }) {
+  return (
+    <div className="bg-white border rounded-xl p-5">
+      <p className="text-gray-500 text-sm">{label}</p>
+      <p className="text-2xl font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function MetricBox({ label, value, danger }) {
+  return (
+    <div>
+      <p className={`text-2xl font-semibold ${danger ? "text-red-600" : "text-blue-600"}`}>
+        {value}
+      </p>
+      <p className="text-gray-500 text-sm">{label}</p>
     </div>
   );
 }

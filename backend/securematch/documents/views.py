@@ -1,11 +1,14 @@
 import time
 from datetime import timedelta
 from django.utils import timezone
-
+from django.db.models import Avg, Count
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.throttling import ScopedRateThrottle
+from crypto_engine.peks import generate_rsa_keypair
+from rest_framework.permissions import AllowAny
+
 
 from crypto_engine.peks import hash_keyword, verify_signature
 from crypto_engine.sse import (
@@ -368,3 +371,126 @@ class AuditorLogsView(APIView):
             status=status.HTTP_200_OK
         )
     
+class InternalMetricsView(APIView):
+
+    def get(self, request):
+        try:
+            now = timezone.now()
+            last_24h = now - timedelta(hours=24)
+
+            total_documents = EncryptedDocument.objects.count()
+            total_tokens = SearchTokenIndex.objects.count()
+
+            external_tokens = SearchTokenIndex.objects.exclude(
+                external_token__isnull=True
+            ).count()
+
+            avg_external = ExternalSearchAudit.objects.filter(
+                success=True
+            ).aggregate(avg=Avg("execution_time_ms"))["avg"] or 0
+
+            external_24h = ExternalSearchAudit.objects.filter(
+                created_at__gte=last_24h
+            ).count()
+
+            failed_24h = ExternalSearchAudit.objects.filter(
+                created_at__gte=last_24h,
+                success=False
+            ).count()
+
+            last_doc = EncryptedDocument.objects.order_by("-created_at").first()
+            last_index_update = (
+                last_doc.created_at.isoformat()
+                if last_doc else None
+            )
+
+            # 🔑 Multi-Auditor Key Info
+            auditors = Auditor.objects.all().order_by("id")
+
+            auditor_data = [
+                {
+                    "auditor_id": a.id,
+                    "name": a.name,
+                    "active_key_version": a.key_version,
+                    "created_at": a.created_at.isoformat()
+                }
+                for a in auditors
+            ]
+
+            return Response({
+                "data": {
+                    "system_metrics": {
+                        "total_documents": total_documents,
+                        "total_tokens": total_tokens,
+                        "external_tokens": external_tokens,
+                        "avg_external_search_ms": round(avg_external, 2),
+                        "external_searches_last_24h": external_24h,
+                        "failed_external_searches_last_24h": failed_24h,
+                        "last_index_update": last_index_update
+                    },
+                    "auditors": auditor_data
+                }
+            })
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )      
+
+class ExternalMetricsView(APIView):
+
+    def get(self, request):
+        try:
+            total_documents = EncryptedDocument.objects.count()
+
+            return Response({
+                "data": {
+                    "total_documents": total_documents
+                }
+            })
+
+        except Exception:
+            return Response(
+                {"error": "Failed to fetch metrics"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class RotateAuditorKeyView(APIView):
+    permission_classes = [AllowAny]  # tighten later if needed
+
+    def post(self, request):
+        auditor_id = request.data.get("auditor_id")
+
+        if not auditor_id:
+            return Response(
+                error_response("MISSING_AUDITOR_ID", "Auditor ID required"),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            auditor = Auditor.objects.get(id=auditor_id)
+        except Auditor.DoesNotExist:
+            return Response(
+                error_response("AUDITOR_NOT_FOUND", "Auditor not found"),
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Generate new keypair
+        private_key, public_key = generate_rsa_keypair()
+
+        # Rotate
+        auditor.public_key = public_key
+        auditor.key_version += 1
+        auditor.save()
+
+        return Response(
+            success_response(
+                data={
+                    "new_private_key": private_key,
+                    "new_public_key": public_key,
+                    "new_key_version": auditor.key_version
+                }
+            ),
+            status=status.HTTP_200_OK
+        )

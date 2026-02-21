@@ -4,7 +4,9 @@ from .views import (
     InternalSearchView,
     ExternalSearchView,
     RotateAuditorKeyView,
-    AuditorLogsView
+    AuditorLogsView,
+    InternalMetricsView,
+    ExternalMetricsView,
 )
 
 urlpatterns = [
@@ -13,4 +15,7 @@ urlpatterns = [
     path("search/external/", ExternalSearchView.as_view()),
     path("auditor/rotate-key/", RotateAuditorKeyView.as_view()),
     path("auditor/<int:auditor_id>/logs/", AuditorLogsView.as_view()),
+    path("metrics/internal/", InternalMetricsView.as_view()),
+    path("metrics/external/", ExternalMetricsView.as_view()),
+    path("auditor/rotate-key/", RotateAuditorKeyView.as_view()),
 ]
