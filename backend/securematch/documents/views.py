@@ -438,6 +438,13 @@ class InternalMetricsView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )      
 
+    def head(self, request):
+        """Respond to HEAD checks (UptimeRobot friendly).
+
+        Returns 200 with no body so external uptime monitors can verify service availability.
+        """
+        return Response(status=status.HTTP_200_OK)
+
 class ExternalMetricsView(APIView):
 
     def get(self, request):
