@@ -152,7 +152,7 @@ export default function SearchPage({ role, auditor, privateKey }) {
           <button
             onClick={handleSearch}
             disabled={loading}
-            className="bg-black text-white px-5 py-2 rounded w-full sm:w-auto text-sm sm:text-base"
+            className="bg-black text-white px-5 py-2 rounded w-full sm:w-auto text-sm sm:text-base transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Searching..." : "Search"}
           </button>
