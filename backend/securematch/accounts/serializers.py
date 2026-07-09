@@ -2,6 +2,8 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
+from accounts.utils import get_primary_role
+
 
 User = get_user_model()
 
@@ -29,11 +31,9 @@ class UserSerializer(serializers.ModelSerializer):
     def get_role(self, obj):
         """
         Retrieves the primary group name for the user to be used as 'role'.
-        ASSUMPTION: If the user belongs to multiple groups (unexpected), we
-        return the alphabetically first group name.
         """
-        group = obj.groups.all().order_by("name").first()
-        return group.name if group else "No Role Assigned"
+        return get_primary_role(obj)
+
 
 
 class LoginSerializer(serializers.Serializer):
