@@ -1,5 +1,6 @@
 import React from "react";
-import PageHeader from "../../components/admin/PageHeader";
+import { User } from "lucide-react";
+import { PageHeader, EmptyState } from "../../components/ui";
 
 export default function Profile() {
   return (
@@ -8,12 +9,12 @@ export default function Profile() {
         title="Admin Profile"
         description="Manage your account profile settings, cryptographic credentials, and session logs."
       />
-      <div className="bg-white border border-gray-200 rounded-2xl p-12 text-center shadow-sm">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Coming Soon</h2>
-        <p className="text-sm text-gray-500 max-w-md mx-auto">
-          The Profile settings portal is currently under development. In the next phase, you will be able to edit your profile details, reset password, and review security logs.
-        </p>
-      </div>
+      <EmptyState
+        title="Coming Soon"
+        description="The Profile settings portal is currently under development. In the next phase, you will be able to edit your profile details, reset password, and review security logs."
+        icon={<User className="w-6 h-6 text-gray-400" />}
+        className="py-16"
+      />
     </div>
   );
 }

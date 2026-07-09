@@ -1,5 +1,13 @@
 import { useState } from "react";
 import { Spinner } from "./Loader";
+import {
+  PageHeader,
+  InfoCard,
+  ContentCard,
+  Badge,
+  StatusBadge,
+  Button,
+} from "./ui";
 
 export default function StoragePage({ showToast }) {
   const documents = [
@@ -85,31 +93,30 @@ export default function StoragePage({ showToast }) {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 animate-[fadeIn_0.3s_ease-out] space-y-6">
       {/* HEADER */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-          Encrypted Database Storage
-        </h1>
-        <p className="text-slate-500 text-sm mt-1 font-light">
-          Inspect how document fields exist in the database: AES-256 ciphertexts accompanied by isolated HMAC index trapdoors.
-        </p>
-      </div>
+      <PageHeader
+        title="Encrypted Database Storage"
+        description="Inspect how document fields exist in the database: AES-256 ciphertexts accompanied by isolated HMAC index trapdoors."
+      />
 
       {/* STATS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-          <p className="text-slate-400 text-xs font-mono uppercase tracking-wider mb-1">Total Vault Documents</p>
-          <p className="text-2xl font-bold text-slate-800 font-mono">3 Records</p>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-          <p className="text-slate-400 text-xs font-mono uppercase tracking-wider mb-1">Encryption Core</p>
-          <p className="text-2xl font-bold text-blue-600 font-mono">AES-256-GCM</p>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-          <p className="text-slate-400 text-xs font-mono uppercase tracking-wider mb-1">Indexing Hash</p>
-          <p className="text-2xl font-bold text-cyan-600 font-mono">HMAC-SHA256</p>
-        </div>
+        <InfoCard
+          title="Total Vault Documents"
+          value="3 Records"
+          description="At-rest repository records count"
+        />
+        <InfoCard
+          title="Encryption Core"
+          value="AES-256-GCM"
+          description="Symmetric cryptosystem schema"
+          className="text-blue-600"
+        />
+        <InfoCard
+          title="Indexing Hash"
+          value="HMAC-SHA256"
+          description="SSE Trapdoor algorithm configuration"
+          className="text-cyan-600"
+        />
       </div>
 
       {/* DOCUMENT LIST */}
@@ -119,9 +126,9 @@ export default function StoragePage({ showToast }) {
           const isDecrypted = decrypted[doc.id];
 
           return (
-            <div
+            <ContentCard
               key={doc.id}
-              className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm relative overflow-hidden group hover:border-gray-300 transition duration-200"
+              className="hover:border-gray-300 transition duration-200"
             >
               {/* TOP ROW */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 pb-4 mb-4 gap-2">
@@ -130,20 +137,19 @@ export default function StoragePage({ showToast }) {
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
                     {doc.id}
                   </p>
-                  <p className="text-gray-500 text-xs mt-0.5">Stored Sync Time: {doc.time}</p>
+                  <p className="text-gray-500 text-xs mt-0.5 font-light">Stored Sync Time: {doc.time}</p>
                 </div>
 
-                <div className="flex gap-2">
-                  <span className="text-[10px] border border-blue-200 px-2.5 py-1 rounded-full bg-blue-50 text-blue-800 font-mono uppercase tracking-wider font-semibold">
-                    AES-256 protected
-                  </span>
+                <div className="flex items-center gap-2">
+                  <StatusBadge status="encrypted" />
                   
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => handleSimulateDecrypt(doc.id)}
                     disabled={isDecrypting}
-                    className={`text-[10px] px-3 py-1 rounded-full transition font-semibold font-mono tracking-wider cursor-pointer uppercase border ${
+                    className={`text-[10px] uppercase font-mono tracking-wider px-3 py-1 rounded-xl border ${
                       isDecrypted
-                        ? "bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+                        ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200"
                         : "bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
                     }`}
                   >
@@ -160,7 +166,7 @@ export default function StoragePage({ showToast }) {
                     ) : (
                       "Decrypt Vault"
                     )}
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -202,7 +208,7 @@ export default function StoragePage({ showToast }) {
                   ))}
                 </div>
               </div>
-            </div>
+            </ContentCard>
           );
         })}
       </div>

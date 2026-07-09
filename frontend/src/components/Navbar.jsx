@@ -1,10 +1,19 @@
 import React, { useState } from "react";
+import { Badge } from "./ui";
 
 export default function Navbar({ activeTab, setActiveTab, role, logout }) {
   const [menuOpen, setMenuOpen] = useState(false);
-
   const isInternal = role === "internal" || role === "admin";
 
+  const getRoleBadgeVariant = (r) => {
+    if (r === "admin") return "indigo";
+    return isInternal ? "blue" : "emerald";
+  };
+
+  const getRoleLabel = (r) => {
+    if (r === "admin") return "Super Administrator";
+    return isInternal ? "Internal Analyst" : "External Auditor";
+  };
 
   return (
     <nav className="w-full sticky top-0 z-50 bg-white border-b border-gray-200/80 shadow-sm text-slate-700">
@@ -29,7 +38,7 @@ export default function Navbar({ activeTab, setActiveTab, role, logout }) {
           </div>
           <div>
             <p className="font-bold text-sm sm:text-base text-gray-800 tracking-tight">
-              Encrypted Search
+              Safe Search
             </p>
             <p className="text-[10px] text-gray-500 font-medium">
               SSE/PEKS Protocol
@@ -88,15 +97,9 @@ export default function Navbar({ activeTab, setActiveTab, role, logout }) {
 
           <div className="h-5 w-[1px] bg-gray-200 mx-3"></div>
 
-          <span className={`text-xs px-3 py-1.5 rounded-xl font-medium border ${
-            role === "admin"
-              ? "bg-indigo-50 border-indigo-200 text-indigo-700"
-              : isInternal 
-              ? "bg-blue-50 border-blue-200 text-blue-700"
-              : "bg-emerald-50 border-emerald-200 text-emerald-700"
-          }`}>
-            {role === "admin" ? "Super Administrator" : isInternal ? "Internal Analyst" : "External Auditor"}
-          </span>
+          <Badge variant={getRoleBadgeVariant(role)} className="px-3 py-1.5">
+            {getRoleLabel(role)}
+          </Badge>
 
           <button
             onClick={logout}
@@ -108,9 +111,9 @@ export default function Navbar({ activeTab, setActiveTab, role, logout }) {
 
         {/* HAMBURGER BUTTON (Mobile Only) */}
         <button
-        className="md:hidden text-slate-500 hover:text-slate-900 p-2 rounded-lg hover:bg-slate-100"
-        onClick={() => setMenuOpen(!menuOpen)}
-      >
+          className="md:hidden text-slate-500 hover:text-slate-900 p-2 rounded-lg hover:bg-slate-100"
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             {menuOpen ? (
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -164,15 +167,9 @@ export default function Navbar({ activeTab, setActiveTab, role, logout }) {
           />
 
           <div className="border-t border-gray-200 pt-3 flex flex-col gap-2">
-            <span className={`text-xs text-center py-2 rounded-lg font-medium border ${
-              role === "admin"
-                ? "bg-indigo-50 border-indigo-200 text-indigo-700"
-                : isInternal 
-                ? "bg-blue-50 border-blue-200 text-blue-700"
-                : "bg-emerald-50 border-emerald-200 text-emerald-700"
-            }`}>
-              {role === "admin" ? "Super Administrator" : isInternal ? "Internal Analyst" : "External Auditor"}
-            </span>
+            <Badge variant={getRoleBadgeVariant(role)} className="w-full justify-center py-2">
+              {getRoleLabel(role)}
+            </Badge>
 
             <button
               onClick={logout}
@@ -193,7 +190,7 @@ function TabButton({ active, onClick, label, icon }) {
   return (
     <button
       onClick={onClick}
-          className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition duration-200 cursor-pointer flex items-center gap-2 ${
+      className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition duration-200 cursor-pointer flex items-center gap-2 ${
         active
           ? "bg-slate-900 text-white border border-slate-900 shadow-sm font-semibold"
           : "text-slate-600 hover:text-slate-900 border border-transparent hover:bg-slate-100"

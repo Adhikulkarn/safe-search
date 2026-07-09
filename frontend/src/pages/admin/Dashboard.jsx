@@ -1,8 +1,13 @@
 import React from "react";
-import PageHeader from "../../components/admin/PageHeader";
-import { Spinner } from "../../components/Loader";
 import { ChevronRight, FileUp, Search, Shield, UserPlus } from "lucide-react";
 import useDashboard from "../../hooks/useDashboard";
+import {
+  PageHeader,
+  ContentCard,
+  StatusBadge,
+  Button,
+} from "../../components/ui";
+import { Spinner } from "../../components/Loader";
 
 export default function AdminDashboard({ navigate }) {
   const { activities, healthChecks, loading } = useDashboard();
@@ -55,7 +60,7 @@ export default function AdminDashboard({ navigate }) {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+          <ContentCard>
             <h2 className="text-lg font-bold text-gray-900 tracking-tight pb-4 border-b border-gray-100 mb-4">
               Quick Actions
             </h2>
@@ -65,11 +70,11 @@ export default function AdminDashboard({ navigate }) {
               <ActionRow icon={FileUp} label="Upload Document" onClick={() => navigate("/admin/documents")} />
               <ActionRow icon={Search} label="Run Search" onClick={() => navigate("/admin/search")} />
             </div>
-          </div>
+          </ContentCard>
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+      <ContentCard>
         <h2 className="text-lg font-bold text-gray-900 tracking-tight pb-4 border-b border-gray-100 mb-2">
           System Status
         </h2>
@@ -77,21 +82,18 @@ export default function AdminDashboard({ navigate }) {
           {statusRows.map((check) => (
             <div key={check.name} className="flex items-center justify-between py-3 gap-4">
               <span className="text-sm font-medium text-gray-700">{check.name}</span>
-              <span className="inline-flex items-center gap-2 text-xs font-bold text-emerald-600 uppercase tracking-wide">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                {check.status}
-              </span>
+              <StatusBadge status={check.status} />
             </div>
           ))}
         </div>
-      </div>
+      </ContentCard>
     </div>
   );
 }
 
 function ActivityPanel({ title, items, empty = "No recent activity." }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+    <ContentCard>
       <h2 className="text-lg font-bold text-gray-900 tracking-tight pb-4 border-b border-gray-100 mb-2">
         {title}
       </h2>
@@ -114,7 +116,7 @@ function ActivityPanel({ title, items, empty = "No recent activity." }) {
           ))
         )}
       </div>
-    </div>
+    </ContentCard>
   );
 }
 

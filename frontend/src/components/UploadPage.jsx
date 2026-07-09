@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { uploadDocument } from "../services/uploadService";
-import Terminal from "./Terminal";
+import {
+  PageHeader,
+  SectionCard,
+  InputGroup,
+  FieldLabel,
+  TextInput,
+  Textarea,
+  Button,
+  Terminal,
+} from "./ui";
 
 export default function UploadPage({ showToast }) {
   const [mode, setMode] = useState("form");
@@ -106,34 +115,23 @@ export default function UploadPage({ showToast }) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 relative animate-[fadeIn_0.3s_ease-out]">
-      
       {/* HEADER */}
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
-          Document Upload
-        </h1>
-        <p className="text-gray-500 text-sm mt-1 font-light">
-          Submit raw financial records for automated AES-256 GCM encryption and dual index token generation.
-        </p>
-      </div>
+      <PageHeader
+        title="Document Upload"
+        description="Submit raw financial records for automated AES-256 GCM encryption and dual index token generation."
+      />
 
       {/* MAIN GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* LEFT PANEL */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm relative">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="font-bold text-lg text-gray-900 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-600"></span>
-              Secure Record Input
-            </h2>
-            <button
-              onClick={loadSample}
-              className="text-xs border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-xl transition duration-150 cursor-pointer font-medium"
-            >
+        <SectionCard
+          title="Secure Record Input"
+          action={
+            <Button variant="secondary" onClick={loadSample}>
               Load Sample
-            </button>
-          </div>
-
+            </Button>
+          }
+        >
           {/* TOGGLE */}
           <div className="flex gap-1.5 p-1 bg-gray-100 rounded-xl mb-6 max-w-max border border-gray-200">
             <button
@@ -163,76 +161,85 @@ export default function UploadPage({ showToast }) {
           {mode === "form" && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormInput
-                  label="Customer ID"
-                  name="customer_id"
-                  value={formData.customer_id}
-                  onChange={handleChange}
-                  placeholder="e.g. CUST1002"
-                />
-                <FormInput
-                  label="Full Name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="e.g. Priyanjali Sen"
-                />
+                <InputGroup>
+                  <FieldLabel>Customer ID</FieldLabel>
+                  <TextInput
+                    name="customer_id"
+                    value={formData.customer_id}
+                    onChange={handleChange}
+                    placeholder="e.g. CUST1002"
+                  />
+                </InputGroup>
+                <InputGroup>
+                  <FieldLabel>Full Name</FieldLabel>
+                  <TextInput
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="e.g. Priyanjali Sen"
+                  />
+                </InputGroup>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormInput
-                  label="PAN Number"
-                  name="pan"
-                  value={formData.pan}
-                  onChange={handleChange}
-                  placeholder="10-digit alpha-numeric"
-                />
-                <FormInput
-                  label="Aadhaar ID"
-                  name="aadhaar"
-                  value={formData.aadhaar}
-                  onChange={handleChange}
-                  placeholder="12-digit numeric"
-                />
+                <InputGroup>
+                  <FieldLabel>PAN Number</FieldLabel>
+                  <TextInput
+                    name="pan"
+                    value={formData.pan}
+                    onChange={handleChange}
+                    placeholder="10-digit alpha-numeric"
+                  />
+                </InputGroup>
+                <InputGroup>
+                  <FieldLabel>Aadhaar ID</FieldLabel>
+                  <TextInput
+                    name="aadhaar"
+                    value={formData.aadhaar}
+                    onChange={handleChange}
+                    placeholder="12-digit numeric"
+                  />
+                </InputGroup>
               </div>
 
-              <FormInput
-                label="Compliance Status Flag"
-                name="compliance_flag"
-                value={formData.compliance_flag}
-                onChange={handleChange}
-                placeholder="e.g. normal, high_risk, audited"
-              />
+              <InputGroup>
+                <FieldLabel>Compliance Status Flag</FieldLabel>
+                <TextInput
+                  name="compliance_flag"
+                  value={formData.compliance_flag}
+                  onChange={handleChange}
+                  placeholder="e.g. normal, high_risk, audited"
+                />
+              </InputGroup>
             </div>
           )}
 
           {/* JSON MODE */}
           {mode === "json" && (
-            <div className="space-y-1.5 animate-[fadeIn_0.2s_ease-out]">
-              <p className="text-xs font-bold text-gray-500 uppercase font-mono tracking-wider">
-                Raw JSON Schema
-              </p>
-              <textarea
+            <InputGroup className="animate-[fadeIn_0.2s_ease-out]">
+              <FieldLabel>Raw JSON Schema</FieldLabel>
+              <Textarea
                 value={jsonInput}
                 onChange={(e) => setJsonInput(e.target.value)}
-                className="w-full h-56 border border-gray-250 bg-white rounded-xl p-4 font-mono text-xs text-gray-800 focus:border-blue-500 focus:outline-none custom-scrollbar"
+                className="h-56"
                 placeholder={`{\n  "customer_id": "CUST1002",\n  "name": "Jane Doe",\n  "pan": "ABCDE1234X",\n  "aadhaar": "987654321012",\n  "compliance_flag": "clear"\n}`}
               />
-            </div>
+            </InputGroup>
           )}
 
-          <button
+          <Button
+            variant="primary"
             onClick={handleSubmit}
-            disabled={loading}
-            className="mt-6 w-full bg-black hover:bg-gray-900 text-white font-medium py-3 rounded-xl transition duration-200 cursor-pointer disabled:opacity-50"
+            loading={loading}
+            className="mt-6 w-full py-3"
           >
             {loading ? "Vaulting Record (See logs)..." : "Encrypt & Upload"}
-          </button>
-        </div>
+          </Button>
+        </SectionCard>
 
         {/* RIGHT PANEL LOGS */}
         <div className="flex flex-col gap-6">
-          <Terminal title="crypto_pipeline.py" logs={logs} />
+          <Terminal title="crypto_pipeline.py" logs={logs} status={loading ? "active" : "idle"} />
 
           {/* PIPELINE INFOGRAPHIC */}
           <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 text-blue-900 shadow-sm">
@@ -268,25 +275,6 @@ export default function UploadPage({ showToast }) {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-/* ================= HELPER INPUTS ================= */
-
-function FormInput({ label, name, value, onChange, placeholder }) {
-  return (
-    <div className="space-y-1.5 flex-1">
-      <label className="text-xs font-bold text-gray-500 uppercase font-mono tracking-wider">
-        {label}
-      </label>
-      <input
-        name={name}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className="w-full border border-gray-250 bg-white rounded-xl px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none text-gray-800"
-      />
     </div>
   );
 }

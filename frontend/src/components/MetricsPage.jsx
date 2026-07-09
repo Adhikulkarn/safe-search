@@ -2,7 +2,16 @@ import { useEffect, useState } from "react";
 import api from "../services/api";
 import { rotateAuditorKey } from "../services/auditorService";
 import CreateAuditorCard from "./CreateAuditorCard";
-import { Spinner, SkeletonStats } from "./Loader";
+import { SkeletonStats } from "./Loader";
+import {
+  PageHeader,
+  InfoCard,
+  ContentCard,
+  Badge,
+  Button,
+  Modal,
+  Divider,
+} from "./ui";
 
 export default function MetricsPage({ role, showToast }) {
   const resolvedRole = role?.toLowerCase() || "internal";
@@ -104,12 +113,12 @@ export default function MetricsPage({ role, showToast }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center shadow-sm">
           <p className="text-red-650 font-medium mb-4">{error}</p>
-          <button
+          <Button
+            variant="primary"
             onClick={fetchMetrics}
-            className="bg-black hover:bg-gray-900 text-white font-medium px-5 py-2 rounded-xl text-sm transition"
           >
             Retry Connection
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -124,26 +133,18 @@ export default function MetricsPage({ role, showToast }) {
   if (!isInternal) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 animate-[fadeIn_0.3s_ease-out]">
-        <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
-            System Metrics
-          </h1>
-          <p className="text-gray-500 text-sm mt-1 font-light">
-            External Auditor Metrics (Restricted access)
-          </p>
-        </div>
+        <PageHeader
+          title="System Metrics"
+          description="External Auditor Metrics (Restricted access)"
+        />
 
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 w-full max-w-sm shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-gray-400 text-xs font-mono uppercase tracking-wider">
-              Total Encrypted Documents
-            </p>
-            <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
-          </div>
-        <p className="text-3xl sm:text-4xl font-bold text-slate-900 break-words font-mono">
-          {safe(externalData?.total_documents)}
-        </p>
-        </div>
+        <InfoCard
+          title="Total Encrypted Documents"
+          value={safe(externalData?.total_documents)}
+          description="Total documents catalogued in SecureMatch"
+          className="max-w-sm"
+          icon={<span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>}
+        />
       </div>
     );
   }
@@ -154,49 +155,70 @@ export default function MetricsPage({ role, showToast }) {
   const systemMetrics = internalData?.system_metrics || {};
   const auditors = internalData?.auditors || [];
 
+  const modalFooter = (
+    <>
+      <Button
+        variant="secondary"
+        onClick={handleCopyRotated}
+      >
+        {copied ? "Copied ✔" : "Copy Private Key"}
+      </Button>
+
+      <Button
+        variant="primary"
+        onClick={() => {
+          setRotatedKeyInfo(null);
+          setCopied(false);
+        }}
+        className="bg-emerald-600 hover:bg-emerald-500"
+      >
+        Completed & Saved Securely
+      </Button>
+    </>
+  );
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 animate-[fadeIn_0.3s_ease-out] space-y-6">
-      
       {/* HEADER */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
-          Analytics & Metrics
-        </h1>
-        <p className="text-slate-500 text-sm mt-1 font-light">
-          Real-time performance metrics, key directories, and secure searchable indexes.
-        </p>
-      </div>
+      <PageHeader
+        title="Analytics & Metrics"
+        description="Real-time performance metrics, key directories, and secure searchable indexes."
+      />
 
       {/* CREATE AUDITOR */}
       <CreateAuditorCard onCreated={fetchMetrics} showToast={showToast} />
 
       {/* TOP STATS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label="Total Vaulted Documents"
+        <InfoCard
+          title="Total Vaulted Documents"
           value={safe(systemMetrics.total_documents)}
+          description="At-rest repository records"
           icon={<svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>}
         />
-        <StatCard
-          label="Symmetric SSE Tokens"
+        <InfoCard
+          title="Symmetric SSE Tokens"
           value={safe(systemMetrics.total_tokens)}
+          description="Computed HMAC index entries"
           icon={<svg className="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>}
         />
-        <StatCard
-          label="Avg External Lookup"
+        <InfoCard
+          title="Avg External Lookup"
           value={`${safe(systemMetrics.avg_external_search_ms)} ms`}
+          description="Average response time"
           icon={<svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>}
         />
-        <StatCard
-          label="Queries (Last 24 Hours)"
+        <InfoCard
+          title="Queries (Last 24h)"
           value={safe(systemMetrics.external_searches_last_24h)}
+          description="Audit operational search volume"
           icon={<svg className="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>}
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* AUDITOR OVERVIEW */}
-    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm text-slate-700">
+        <ContentCard>
           <h3 className="font-bold mb-5 text-base sm:text-lg text-gray-900 flex items-center gap-2">
             <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -227,31 +249,32 @@ export default function MetricsPage({ role, showToast }) {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button
+                    <Button
+                      variant="secondary"
                       onClick={() => handleRotateKey(auditor.auditor_id)}
                       disabled={rotatingId === auditor.auditor_id}
-                      className="text-xs bg-white hover:bg-gray-50 text-blue-600 border border-gray-300 px-3 py-1.5 rounded-lg transition cursor-pointer disabled:opacity-50 font-medium shadow-sm"
+                      className="px-3 py-1.5 shadow-sm text-xs text-blue-600"
                     >
                       {rotatingId === auditor.auditor_id ? "Rotating..." : "Rotate Key"}
-                    </button>
+                    </Button>
                     
-                    <button
+                    <Button
+                      variant="ghost"
                       onClick={() => handleDeleteAuditor(auditor.auditor_id)}
-                      className="text-xs text-red-650 hover:bg-red-50 border border-red-100 px-3 py-1.5 rounded-lg transition cursor-pointer font-medium"
+                      className="text-xs text-rose-600 hover:text-rose-700"
                     >
                       Delete
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </ContentCard>
 
-        {/* SECURITY & INDEX HEALTH */}
+        {/* SECURITY & DIAGNOSTICS */}
         <div className="space-y-6">
-          {/* SECURITY OVERVIEW */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+          <ContentCard>
             <h3 className="font-bold mb-5 text-base sm:text-lg text-gray-900 flex items-center gap-2">
               <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -260,20 +283,26 @@ export default function MetricsPage({ role, showToast }) {
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
-              <MetricBox
-                label="Failed Audit Signatures (24h)"
-                value={safe(systemMetrics.failed_external_searches_last_24h)}
-                danger={safe(systemMetrics.failed_external_searches_last_24h) > 0}
-              />
-              <MetricBox
-                label="PEKS External Index Tokens"
-                value={safe(systemMetrics.external_tokens)}
-              />
+              <div className="bg-slate-50 border border-slate-200 p-5 rounded-xl flex-1">
+                <p className={`text-2xl font-bold font-mono ${safe(systemMetrics.failed_external_searches_last_24h) > 0 ? "text-rose-600" : "text-blue-600"}`}>
+                  {safe(systemMetrics.failed_external_searches_last_24h)}
+                </p>
+                <p className="text-slate-500 text-xs mt-1.5 uppercase font-mono tracking-wider font-semibold">
+                  Failed Audit Signatures (24h)
+                </p>
+              </div>
+              <div className="bg-slate-50 border border-slate-200 p-5 rounded-xl flex-1">
+                <p className="text-2xl font-bold font-mono text-blue-600">
+                  {safe(systemMetrics.external_tokens)}
+                </p>
+                <p className="text-slate-500 text-xs mt-1.5 uppercase font-mono tracking-wider font-semibold">
+                  PEKS External Index Tokens
+                </p>
+              </div>
             </div>
-          </div>
+          </ContentCard>
 
-          {/* INDEX HEALTH */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+          <ContentCard>
             <h3 className="font-bold mb-4 text-base sm:text-lg text-gray-900 flex items-center gap-2">
               <svg className="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -281,107 +310,45 @@ export default function MetricsPage({ role, showToast }) {
               Index Health Sync
             </h3>
 
-            <div className="space-y-3 font-sans">
-              <Row
-                label="Last Index Update"
-                value={safeDate(systemMetrics.last_index_update)}
-              />
-              <Row
-                label="Total Search Tokens"
-                value={safe(systemMetrics.total_tokens)}
-              />
-              <Row
-                label="Active Master Seed Version"
-                value="HKDF-SHA256 (Base Seed v1)"
-              />
+            <div className="space-y-3 font-sans text-xs sm:text-sm">
+              <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                <span className="text-slate-500">Last Index Update</span>
+                <span className="font-mono text-slate-800 break-all">{safeDate(systemMetrics.last_index_update)}</span>
+              </div>
+              <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                <span className="text-slate-500">Total Search Tokens</span>
+                <span className="font-mono text-slate-800 break-all">{safe(systemMetrics.total_tokens)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500">Active Master Seed Version</span>
+                <span className="font-mono text-slate-800 break-all text-xs font-semibold">HKDF-SHA256 (Base Seed v1)</span>
+              </div>
             </div>
-          </div>
+          </ContentCard>
         </div>
       </div>
 
       {/* ROTATED KEY MODAL */}
-      {rotatedKeyInfo && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 w-full max-w-xl shadow-2xl animate-[slideIn_0.2s_ease-out]">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              🔑 Rotated Keypair Ready (Version {rotatedKeyInfo.version})
-            </h2>
-            <p className="text-xs text-red-600 font-mono mb-4 font-semibold">
-              WARNING: Save this private key now. It cannot be displayed again!
-            </p>
-
-            <textarea
-              readOnly
-              value={rotatedKeyInfo.privateKey}
-              className="w-full h-44 border border-gray-200 bg-gray-50 p-3 rounded-xl font-mono text-2xs text-slate-800 mb-4 select-all custom-scrollbar focus:outline-none"
-            />
-
-            <div className="flex flex-col sm:flex-row sm:justify-end gap-2.5">
-              <button
-                onClick={handleCopyRotated}
-                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs font-semibold rounded-xl transition cursor-pointer shadow-sm"
-              >
-                {copied ? "Copied ✔" : "Copy Private Key"}
-              </button>
-
-              <button
-                onClick={() => {
-                  setRotatedKeyInfo(null);
-                  setCopied(false);
-                }}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 text-xs font-bold rounded-xl transition cursor-pointer shadow-sm"
-              >
-                Completed & Saved Securely
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ================= COMPONENT LABELS ================= */
-
-function StatCard({ label, value, icon }) {
-  return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-5 hover:border-gray-300 transition duration-200 flex items-center justify-between shadow-sm">
-      <div>
-        <p className="text-slate-500 text-xs uppercase font-mono tracking-wider mb-1">{label}</p>
-        <p className="text-2xl font-bold text-slate-800 font-mono break-words">
-          {value}
-        </p>
-      </div>
-      <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center">
-        {icon}
-      </div>
-    </div>
-  );
-}
-
-function MetricBox({ label, value, danger }) {
-  return (
-    <div className="bg-slate-50 border border-slate-200 p-5 rounded-xl flex-1">
-      <p
-        className={`text-2xl font-bold break-words font-mono ${
-          danger ? "text-red-600" : "text-blue-600"
-        }`}
+      <Modal
+        isOpen={!!rotatedKeyInfo}
+        onClose={() => {
+          setRotatedKeyInfo(null);
+          setCopied(false);
+        }}
+        title={`🔑 Rotated Keypair Ready (Version ${rotatedKeyInfo?.version || ""})`}
+        footer={modalFooter}
+        className="max-w-xl"
       >
-        {value}
-      </p>
-      <p className="text-slate-500 text-xs mt-1.5 uppercase font-mono tracking-wider font-semibold">
-        {label}
-      </p>
-    </div>
-  );
-}
+        <p className="text-xs text-rose-650 font-mono mb-4 font-semibold">
+          WARNING: Save this private key now. It cannot be displayed again!
+        </p>
 
-function Row({ label, value }) {
-  return (
-    <div className="flex justify-between items-center border-b border-gray-100 pb-3 last:border-0 last:pb-0 gap-3 text-xs sm:text-sm">
-      <span className="text-slate-500">{label}</span>
-      <span className="font-mono text-slate-800 break-all">{value}</span>
+        <textarea
+          readOnly
+          value={rotatedKeyInfo?.privateKey || ""}
+          className="w-full h-44 border border-gray-250 bg-gray-50 p-3 rounded-xl font-mono text-2xs text-slate-800 mb-4 select-all custom-scrollbar focus:outline-none"
+        />
+      </Modal>
     </div>
   );
 }

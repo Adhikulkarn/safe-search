@@ -1,4 +1,5 @@
 import React from "react";
+import { SelectInput, Button } from "../ui";
 
 export default function IdentityFilters({
   selectedRole,
@@ -8,60 +9,55 @@ export default function IdentityFilters({
   onReset,
 }) {
   const roles = [
-    "Internal Analyst",
-    "Compliance Officer",
-    "External Auditor",
-    "Read Only Analyst",
+    { value: "", label: "All Roles" },
+    { value: "Internal Analyst", label: "Internal Analyst" },
+    { value: "Compliance Officer", label: "Compliance Officer" },
+    { value: "External Auditor", label: "External Auditor" },
+    { value: "Read Only Analyst", label: "Read Only Analyst" },
   ];
 
-  const statuses = ["Active", "Disabled", "Locked"];
+  const statuses = [
+    { value: "", label: "All Statuses" },
+    { value: "Active", label: "Active" },
+    { value: "Disabled", label: "Disabled" },
+    { value: "Locked", label: "Locked" },
+  ];
 
   const hasActiveFilters = selectedRole !== "" || selectedStatus !== "";
 
   return (
-    <div className="flex flex-wrap items-center gap-3 font-sans">
+    <div className="flex flex-wrap items-center gap-4 font-sans">
       {/* Role Filter */}
       <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-500 font-medium">Role</span>
-        <select
+        <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Role</span>
+        <SelectInput
           value={selectedRole}
           onChange={(e) => onRoleChange(e.target.value)}
-          className="border border-gray-200 bg-white rounded-xl px-3 py-2 text-xs font-semibold focus:border-black focus:outline-none text-gray-700 cursor-pointer shadow-xs transition hover:border-gray-300"
-        >
-          <option value="">All Roles</option>
-          {roles.map((role) => (
-            <option key={role} value={role}>
-              {role}
-            </option>
-          ))}
-        </select>
+          options={roles}
+          className="py-1.5 px-3 text-xs w-40"
+        />
       </div>
 
       {/* Status Filter */}
       <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-500 font-medium">Status</span>
-        <select
+        <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Status</span>
+        <SelectInput
           value={selectedStatus}
           onChange={(e) => onStatusChange(e.target.value)}
-          className="border border-gray-200 bg-white rounded-xl px-3 py-2 text-xs font-semibold focus:border-black focus:outline-none text-gray-700 cursor-pointer shadow-xs transition hover:border-gray-300"
-        >
-          <option value="">All Statuses</option>
-          {statuses.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
+          options={statuses}
+          className="py-1.5 px-3 text-xs w-36"
+        />
       </div>
 
       {/* Reset Filter Button */}
       {hasActiveFilters && (
-        <button
+        <Button
+          variant="ghost"
           onClick={onReset}
-          className="text-xs font-bold text-rose-600 hover:text-rose-800 transition px-3 py-2 rounded-xl hover:bg-rose-50 cursor-pointer"
+          className="text-xs font-bold text-rose-600 hover:text-rose-800 hover:bg-rose-50 px-3 py-1.5"
         >
           Clear Filters
-        </button>
+        </Button>
       )}
     </div>
   );

@@ -1,7 +1,15 @@
 import { useState } from "react";
 import api from "../services/api";
 import { normalizeKeyword, sha256Hex, signHashHex } from "../utils/crypto";
-import Terminal from "./Terminal";
+import {
+  PageHeader,
+  ContentCard,
+  TextInput,
+  SelectInput,
+  Button,
+  Terminal,
+  EmptyState,
+} from "./ui";
 
 export default function SearchPage({ role, auditor, privateKey, showToast }) {
   const [query, setQuery] = useState("");
@@ -126,40 +134,41 @@ export default function SearchPage({ role, auditor, privateKey, showToast }) {
     }
   };
 
+  const fieldOptions = [
+    { value: "pan", label: "PAN" },
+    { value: "customer_id", label: "Customer ID" },
+    { value: "aadhaar", label: "Aadhaar" },
+    { value: "name", label: "Name" },
+    { value: "compliance_flag", label: "Compliance Flag" },
+  ];
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 relative animate-[fadeIn_0.3s_ease-out]">
       {/* HEADER */}
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
-          Encrypted Search
-        </h1>
-        <p className="text-gray-500 text-sm mt-1 font-light">
-          {role === "internal"
+      <PageHeader
+        title="Encrypted Search"
+        description={
+          role === "internal"
             ? "SSE Console: Search securely using index trapdoors and return decrypted records."
-            : "PEKS Auditor Console: Verify matching records without decrypting raw data payloads."}
-        </p>
-      </div>
+            : "PEKS Auditor Console: Verify matching records without decrypting raw data payloads."
+        }
+      />
 
       {/* ================= SEARCH CARD ================= */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6 shadow-sm relative">
+      <ContentCard className="mb-6">
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Internal Dropdown */}
           {role === "internal" && (
-            <select
+            <SelectInput
               value={field}
               onChange={(e) => setField(e.target.value)}
-              className="border border-gray-300 bg-white px-4 py-2.5 rounded-xl text-sm focus:border-blue-500 focus:outline-none text-gray-800 cursor-pointer"
-            >
-              <option value="pan">PAN</option>
-              <option value="customer_id">Customer ID</option>
-              <option value="aadhaar">Aadhaar</option>
-              <option value="name">Name</option>
-              <option value="compliance_flag">Compliance Flag</option>
-            </select>
+              options={fieldOptions}
+              className="sm:w-48"
+            />
           )}
 
           {/* Search Input */}
-          <input
+          <TextInput
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={
@@ -167,21 +176,22 @@ export default function SearchPage({ role, auditor, privateKey, showToast }) {
                 ? `Enter field query (e.g. CUST1001 or Ravi)...`
                 : "Enter auditor keyword query (e.g. CUST1001, clear, high_risk)..."
             }
-            className="w-full sm:flex-1 border border-gray-300 bg-white rounded-xl px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none text-gray-800"
+            className="sm:flex-1"
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSearch();
             }}
           />
 
           {/* Search Button */}
-          <button
+          <Button
             onClick={handleSearch}
-            className="font-medium px-6 py-2.5 rounded-xl text-sm transition duration-200 cursor-pointer border bg-black hover:bg-gray-900 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            loading={loading}
+            className="px-6 py-2.5"
           >
             Search
-          </button>
+          </Button>
         </div>
-      </div>
+      </ContentCard>
 
       {/* ================= RESULTS / LAYOUT GRID ================= */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
@@ -189,7 +199,7 @@ export default function SearchPage({ role, auditor, privateKey, showToast }) {
         <div className="space-y-6">
           {/* ================= INTERNAL RESULTS ================= */}
           {role === "internal" && (
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+            <ContentCard>
               <h2 className="font-bold mb-4 text-base sm:text-lg text-gray-900 flex items-center gap-2">
                 <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -198,9 +208,11 @@ export default function SearchPage({ role, auditor, privateKey, showToast }) {
               </h2>
 
               {results.length === 0 ? (
-                <div className="text-center py-12 border border-dashed border-gray-350 rounded-xl">
-                  <p className="text-gray-400 text-sm">No decrypted query results found.</p>
-                </div>
+                <EmptyState
+                  title="No decrypted records"
+                  description="Submit a search query to pull and decrypt matching records."
+                  className="py-12 border-dashed"
+                />
               ) : (
                 <div className="space-y-3.5 max-h-[30rem] overflow-y-auto pr-1 custom-scrollbar">
                   {results.map((r, i) => (
@@ -213,12 +225,12 @@ export default function SearchPage({ role, auditor, privateKey, showToast }) {
                   ))}
                 </div>
               )}
-            </div>
+            </ContentCard>
           )}
 
           {/* ================= EXTERNAL AUDIT RESULT SKEET ================= */}
           {role === "external" && meta && (
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm animate-[fadeIn_0.3s_ease-out]">
+            <ContentCard className="animate-[fadeIn_0.3s_ease-out]">
               <h2 className="font-bold mb-6 text-base sm:text-lg text-gray-900 flex items-center gap-2">
                 <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -267,27 +279,31 @@ export default function SearchPage({ role, auditor, privateKey, showToast }) {
                   )}
                 </div>
               </div>
-            </div>
+            </ContentCard>
           )}
 
           {/* Verification Pending Helper Card */}
           {role === "external" && !meta && (
-            <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center shadow-sm">
-              <div className="w-12 h-12 bg-gray-50 border border-gray-200 rounded-xl mx-auto mb-4 flex items-center justify-center text-gray-400">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <EmptyState
+              title="Awaiting Signature Query"
+              description="Enter a query term to verify record existence. The query will be signed using your RSA key before submitting."
+              icon={
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
-              </div>
-              <h3 className="font-semibold text-gray-800 mb-1">Awaiting Signature Query</h3>
-              <p className="text-gray-500 text-xs max-w-xs mx-auto leading-relaxed">
-                Enter a query term to verify record existence. The query will be signed using your RSA key before submitting.
-              </p>
-            </div>
+              }
+              className="py-12 border-dashed bg-white"
+            />
           )}
         </div>
 
         {/* RIGHT COLUMN: RUNTIME LOGS */}
-        <Terminal title={role === "internal" ? "sse_search.py" : "peks_verifier.sh"} logs={logs} />
+        <Terminal
+          title={role === "internal" ? "sse_search.py" : "peks_verifier.sh"}
+          logs={logs}
+          status={loading ? "active" : "idle"}
+          loading={loading}
+        />
       </div>
     </div>
   );
@@ -298,7 +314,7 @@ export default function SearchPage({ role, auditor, privateKey, showToast }) {
 function Info({ label, value, highlight }) {
   return (
     <div className="space-y-0.5">
-      <p className="text-gray-400 text-xs uppercase font-mono tracking-wider font-semibold">{label}</p>
+      <p className="text-gray-450 text-[10px] uppercase font-mono tracking-wider font-semibold">{label}</p>
       <p className={`font-semibold break-words text-sm text-gray-800 ${highlight || ""}`}>
         {value}
       </p>

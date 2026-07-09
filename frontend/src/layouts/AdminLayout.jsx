@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Badge } from "../components/ui";
 
 export default function AdminLayout({ children, logout, navigate, currentPath }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -54,9 +55,9 @@ export default function AdminLayout({ children, logout, navigate, currentPath })
 
             <div className="h-5 w-[1px] bg-gray-200 mx-3"></div>
 
-            <span className="text-xs px-3 py-1.5 rounded-xl font-medium border bg-blue-50 border-blue-200 text-blue-700">
+            <Badge variant="blue" className="px-3 py-1.5">
               Super Administrator
-            </span>
+            </Badge>
 
             <button
               onClick={logout}
@@ -96,9 +97,9 @@ export default function AdminLayout({ children, logout, navigate, currentPath })
               />
             ))}
             <div className="border-t border-gray-200 pt-3 flex flex-col gap-2">
-              <span className="text-xs text-center py-2 rounded-lg font-medium border bg-blue-50 border-blue-200 text-blue-700">
+              <Badge variant="blue" className="w-full justify-center py-2">
                 Super Administrator
-              </span>
+              </Badge>
               <button
                 onClick={logout}
                 className="w-full text-center text-xs text-rose-600 hover:bg-rose-50 border border-rose-200 py-2.5 rounded-lg transition duration-150 cursor-pointer"

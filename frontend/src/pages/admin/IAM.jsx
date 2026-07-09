@@ -1,15 +1,21 @@
 import React, { useState } from "react";
-import PageHeader from "../../components/admin/PageHeader";
+import { Plus } from "lucide-react";
+import useIdentity from "../../hooks/useIdentity";
 import IdentitySearch from "../../components/iam/IdentitySearch";
 import IdentityFilters from "../../components/iam/IdentityFilters";
 import IdentityTable from "../../components/iam/IdentityTable";
 import IdentityModal from "../../components/iam/IdentityModal";
 import DisableIdentityDialog from "../../components/iam/DisableIdentityDialog";
 import DeleteIdentityDialog from "../../components/iam/DeleteIdentityDialog";
-import EmptyState from "../../components/iam/EmptyState";
-import LoadingSkeleton from "../../components/iam/LoadingSkeleton";
-import { Plus } from "lucide-react";
-import useIdentity from "../../hooks/useIdentity";
+import {
+  PageHeader,
+  ContentCard,
+  Toolbar,
+  ToolbarGroup,
+  EmptyState,
+  LoadingSkeleton,
+  Button,
+} from "../../components/ui";
 
 export default function IAM({ showToast }) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,10 +82,10 @@ export default function IAM({ showToast }) {
         description="Manage SecureMatch identities, assigned roles and platform access."
       />
 
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-gray-100 mb-6">
+      <ContentCard>
+        <Toolbar>
           <IdentitySearch value={searchQuery} onChange={setSearchQuery} />
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <ToolbarGroup>
             <IdentityFilters
               selectedRole={selectedRole}
               onRoleChange={setSelectedRole}
@@ -87,25 +93,28 @@ export default function IAM({ showToast }) {
               onStatusChange={setSelectedStatus}
               onReset={handleResetFilters}
             />
-            <button
+            <Button
+              variant="primary"
               onClick={() => {
                 setModalMode("create");
                 setSelectedIdentity(null);
                 setModalOpen(true);
               }}
-              className="flex items-center justify-center gap-2 bg-black hover:bg-gray-900 text-white font-medium py-2.5 px-4 rounded-xl transition cursor-pointer text-sm"
-              type="button"
+              icon={<Plus className="w-4 h-4" />}
             >
-              <Plus className="w-4 h-4" />
               Create Identity
-            </button>
-          </div>
-        </div>
+            </Button>
+          </ToolbarGroup>
+        </Toolbar>
 
         {loading ? (
-          <LoadingSkeleton />
+          <LoadingSkeleton rows={5} />
         ) : identities.length === 0 ? (
-          <EmptyState />
+          <EmptyState
+            title="No identities found"
+            description="Create your first identity to begin managing SecureMatch access."
+            className="border-dashed"
+          />
         ) : (
           <IdentityTable
             identities={identities}
@@ -129,7 +138,7 @@ export default function IAM({ showToast }) {
             }}
           />
         )}
-      </div>
+      </ContentCard>
 
       {/* Identity Configuration Modal */}
       <IdentityModal

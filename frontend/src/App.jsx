@@ -12,6 +12,17 @@ import PermissionRoute from "./routes/PermissionRoute";
 import { Roles } from "./constants/roles";
 import { hasRole, hasAnyRole, getRoleFromUser } from "./config/permissions";
 
+// UI Components
+import {
+  Button,
+  TextInput,
+  PasswordInput,
+  FieldLabel,
+  InputGroup,
+  ContentCard,
+  StatusBadge,
+} from "./components/ui";
+
 // Admin Dashboard Components & Pages
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -318,42 +329,40 @@ export default function App() {
     if (showAdminLogin) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6 py-12">
-          <div className="bg-white border border-gray-200 rounded-2xl p-8 w-full max-w-md shadow-sm font-sans">
+          <ContentCard className="w-full max-w-md p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Super Administrator Login</h2>
             <p className="text-xs text-gray-500 mb-6 font-medium">Provide your username and password credentials to access the administrative portal.</p>
             <div className="space-y-4">
-              <div className="space-y-1.5">
-                <p className="text-xs text-gray-600 font-semibold font-mono tracking-wider">Username</p>
-                <input
-                  type="text"
+              <InputGroup>
+                <FieldLabel>Username</FieldLabel>
+                <TextInput
                   value={usernameInput}
                   onChange={(e) => setUsernameInput(e.target.value)}
-                  className="w-full border border-gray-200 bg-white rounded-xl p-3 text-sm focus:border-black focus:outline-none text-gray-800"
                   placeholder="Enter admin username"
                 />
-              </div>
-              <div className="space-y-1.5">
-                <p className="text-xs text-gray-600 font-semibold font-mono tracking-wider">Password</p>
-                <input
-                  type="password"
+              </InputGroup>
+              <InputGroup>
+                <FieldLabel>Password</FieldLabel>
+                <PasswordInput
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
-                  className="w-full border border-gray-200 bg-white rounded-xl p-3 text-sm focus:border-black focus:outline-none text-gray-800"
                   placeholder="Enter admin password"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleAdminLogin();
                   }}
                 />
-              </div>
-              <button
+              </InputGroup>
+              <Button
+                variant="primary"
                 onClick={handleAdminLogin}
-                disabled={loggingIn}
-                className="w-full bg-black hover:bg-gray-900 text-white font-medium py-3 rounded-xl transition cursor-pointer disabled:opacity-50"
+                loading={loggingIn}
+                className="w-full py-3"
               >
                 {loggingIn ? "Logging in..." : "Login"}
-              </button>
+              </Button>
             </div>
-            <button
+            <Button
+              variant="ghost"
               onClick={() => {
                 setUsernameInput("");
                 setPasswordInput("");
@@ -362,11 +371,11 @@ export default function App() {
                 }
                 updateRoleState(null);
               }}
-              className="mt-6 w-full text-center text-xs text-gray-500 hover:text-gray-800 transition cursor-pointer font-medium"
+              className="mt-6 w-full text-center text-xs text-gray-500 hover:text-gray-800 transition font-medium"
             >
               ← Back
-            </button>
-          </div>
+            </Button>
+          </ContentCard>
           {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
       );
@@ -376,7 +385,7 @@ export default function App() {
     if (!role) {
       return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6 py-12 relative font-sans">
-          <div className="text-center mb-10">
+          <div className="text-center mb-10 select-none">
             <div className="w-14 h-14 bg-blue-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-md">
               <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -388,63 +397,66 @@ export default function App() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-6xl w-full">
             {/* PORTAL 1: SUPER ADMINISTRATOR */}
-            <div className="bg-white border rounded-2xl p-8 shadow-sm flex flex-col justify-between group hover:border-blue-500/50 transition">
+            <ContentCard className="flex flex-col justify-between group hover:border-blue-500/50 transition">
               <div>
                 <h2 className="text-xl font-bold text-gray-900 mb-2">Super Administrator</h2>
-                <p className="text-gray-500 text-sm mb-5">Complete administrative access to SecureMatch.</p>
+                <p className="text-gray-550 text-sm mb-5">Complete administrative access to SecureMatch.</p>
                 <ul className="text-sm space-y-3 mb-6 text-gray-600">
-                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>User Management</li>
-                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>Auditor Management</li>
-                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>System Metrics</li>
-                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>Full Administrative Access</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-650"></span>User Management</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-655"></span>Auditor Management</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-650"></span>System Metrics</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-650"></span>Full Administrative Access</li>
                 </ul>
               </div>
-              <button
+              <Button
+                variant="primary"
                 onClick={() => updateRoleState({ type: "admin_login" })}
-                className="w-full bg-black hover:bg-gray-900 text-white font-medium py-2.5 rounded-xl transition cursor-pointer"
+                className="w-full py-2.5"
               >
                 Continue to Admin Portal
-              </button>
-            </div>
+              </Button>
+            </ContentCard>
 
             {/* PORTAL 2: INTERNAL PORTAL */}
-            <div className="bg-white border rounded-2xl p-8 shadow-sm flex flex-col justify-between group hover:border-blue-500/50 transition">
+            <ContentCard className="flex flex-col justify-between group hover:border-blue-500/50 transition">
               <div>
                 <h2 className="text-xl font-bold text-gray-900 mb-2">Internal Portal</h2>
-                <p className="text-gray-500 text-sm mb-5">Secure operational workspace for internal teams.</p>
+                <p className="text-gray-550 text-sm mb-5">Secure operational workspace for internal teams.</p>
                 <ul className="text-sm space-y-3 mb-6 text-gray-600">
-                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>Upload encrypted documents</li>
-                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>Internal encrypted search (SSE)</li>
-                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>View encrypted storage</li>
-                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>Access internal metrics</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-650"></span>Upload encrypted documents</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-650"></span>Internal encrypted search (SSE)</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-650"></span>View encrypted storage</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-650"></span>Access internal metrics</li>
                 </ul>
               </div>
-              <button
+              <Button
+                variant="primary"
                 onClick={() => updateRoleState({ type: "internal_login" })}
-                className="w-full bg-black hover:bg-gray-900 text-white font-medium py-2.5 rounded-xl transition cursor-pointer"
+                className="w-full py-2.5"
               >
                 Continue to Internal Portal
-              </button>
-            </div>
+              </Button>
+            </ContentCard>
 
             {/* PORTAL 3: EXTERNAL AUDITOR PORTAL */}
-            <div className="bg-white border rounded-2xl p-8 shadow-sm flex flex-col justify-between group hover:border-emerald-500/50 transition">
+            <ContentCard className="flex flex-col justify-between group hover:border-emerald-500/50 transition">
               <div>
                 <h2 className="text-xl font-bold text-gray-900 mb-2">External Auditor Portal</h2>
-                <p className="text-gray-500 text-sm mb-5">Secure search-only workspace for authorized auditors.</p>
+                <p className="text-gray-555 text-sm mb-5">Secure search-only workspace for authorized auditors.</p>
                 <ul className="text-sm space-y-3 mb-6 text-gray-600">
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>PEKS Search</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>Limited Metrics</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>Secure Auditor Access</li>
                 </ul>
               </div>
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => updateRoleState({ type: "external_login" })}
-                className="w-full border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-2.5"
               >
                 Continue to Auditor Portal
-              </button>
-            </div>
+              </Button>
+            </ContentCard>
           </div>
 
           <p className="text-xs text-gray-400 mt-10 text-center max-w-xl font-mono">Role-Based Access Control • SSE • PEKS</p>
@@ -458,52 +470,50 @@ export default function App() {
     if (role.type === "internal_login") {
       return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6 py-12">
-          <div className="bg-white border border-gray-200 rounded-2xl p-8 w-full max-w-md shadow-sm">
+          <ContentCard className="w-full max-w-md p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Internal Analyst Login</h2>
             <p className="text-xs text-gray-500 mb-6 font-medium">Provide your username and password credentials to access the operational portal.</p>
             <div className="space-y-4">
-              <div className="space-y-1.5">
-                <p className="text-xs text-gray-600 font-semibold font-mono tracking-wider">Username</p>
-                <input
-                  type="text"
+              <InputGroup>
+                <FieldLabel>Username</FieldLabel>
+                <TextInput
                   value={usernameInput}
                   onChange={(e) => setUsernameInput(e.target.value)}
-                  className="w-full border border-gray-200 bg-white rounded-xl p-3 text-sm focus:border-black focus:outline-none text-gray-800"
                   placeholder="Enter username"
                 />
-              </div>
-              <div className="space-y-1.5">
-                <p className="text-xs text-gray-600 font-semibold font-mono tracking-wider">Password</p>
-                <input
-                  type="password"
+              </InputGroup>
+              <InputGroup>
+                <FieldLabel>Password</FieldLabel>
+                <PasswordInput
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
-                  className="w-full border border-gray-200 bg-white rounded-xl p-3 text-sm focus:border-black focus:outline-none text-gray-800"
                   placeholder="Enter password"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleInternalLogin();
                   }}
                 />
-              </div>
-              <button
+              </InputGroup>
+              <Button
+                variant="primary"
                 onClick={handleInternalLogin}
-                disabled={loggingIn}
-                className="w-full bg-black hover:bg-gray-900 text-white font-medium py-3 rounded-xl transition cursor-pointer disabled:opacity-50"
+                loading={loggingIn}
+                className="w-full py-3"
               >
                 {loggingIn ? "Logging in..." : "Login"}
-              </button>
+              </Button>
             </div>
-            <button
+            <Button
+              variant="ghost"
               onClick={() => {
                 setUsernameInput("");
                 setPasswordInput("");
                 updateRoleState(null);
               }}
-              className="mt-6 w-full text-center text-xs text-gray-500 hover:text-gray-800 transition cursor-pointer font-medium"
+              className="mt-6 w-full text-center text-xs text-gray-500 hover:text-gray-800 transition font-medium"
             >
               ← Back
-            </button>
-          </div>
+            </Button>
+          </ContentCard>
           {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
       );
@@ -513,52 +523,50 @@ export default function App() {
     if (role.type === "external_login") {
       return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6 py-12">
-          <div className="bg-white border border-gray-200 rounded-2xl p-8 w-full max-w-md shadow-sm">
+          <ContentCard className="w-full max-w-md p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">External Auditor Login</h2>
             <p className="text-xs text-gray-500 mb-6 font-medium">Provide your credentials to authenticate and select your auditor identity.</p>
             <div className="space-y-4">
-              <div className="space-y-1.5">
-                <p className="text-xs text-gray-600 font-semibold font-mono tracking-wider">Username</p>
-                <input
-                  type="text"
+              <InputGroup>
+                <FieldLabel>Username</FieldLabel>
+                <TextInput
                   value={usernameInput}
                   onChange={(e) => setUsernameInput(e.target.value)}
-                  className="w-full border border-gray-200 bg-white rounded-xl p-3 text-sm focus:border-black focus:outline-none text-gray-800"
                   placeholder="Enter username"
                 />
-              </div>
-              <div className="space-y-1.5">
-                <p className="text-xs text-gray-600 font-semibold font-mono tracking-wider">Password</p>
-                <input
-                  type="password"
+              </InputGroup>
+              <InputGroup>
+                <FieldLabel>Password</FieldLabel>
+                <PasswordInput
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
-                  className="w-full border border-gray-200 bg-white rounded-xl p-3 text-sm focus:border-black focus:outline-none text-gray-800"
                   placeholder="Enter password"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleExternalLogin();
                   }}
                 />
-              </div>
-              <button
+              </InputGroup>
+              <Button
+                variant="primary"
                 onClick={handleExternalLogin}
-                disabled={loggingIn}
-                className="w-full bg-black hover:bg-gray-900 text-white font-medium py-3 rounded-xl transition cursor-pointer disabled:opacity-50"
+                loading={loggingIn}
+                className="w-full py-3"
               >
                 {loggingIn ? "Logging in..." : "Login"}
-              </button>
+              </Button>
             </div>
-            <button
+            <Button
+              variant="ghost"
               onClick={() => {
                 setUsernameInput("");
                 setPasswordInput("");
                 updateRoleState(null);
               }}
-              className="mt-6 w-full text-center text-xs text-gray-500 hover:text-gray-800 transition cursor-pointer font-medium"
+              className="mt-6 w-full text-center text-xs text-gray-500 hover:text-gray-800 transition font-medium"
             >
               ← Back
-            </button>
-          </div>
+            </Button>
+          </ContentCard>
           {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
       );
@@ -568,14 +576,14 @@ export default function App() {
     if (role.type === "external_select") {
       return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6 py-12">
-          <div className="bg-white border border-gray-200 rounded-2xl p-8 w-full max-w-md shadow-sm">
+          <ContentCard className="w-full max-w-md p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Select Auditor Identity</h2>
             <p className="text-xs text-gray-500 mb-6 font-medium">Choose your registered identity and provide the matching private key credentials.</p>
 
             {loadingAuditors ? (
               <div className="py-8"><Spinner text="Loading auditor registry..." /></div>
             ) : externalAuditors.length === 0 ? (
-              <p className="text-gray-500 text-sm text-center py-6 border border-dashed rounded-xl">No auditors available.</p>
+              <p className="text-gray-500 text-sm text-center py-6 border border-dashed rounded-xl mb-6">No auditors available.</p>
             ) : (
               <div className="space-y-2 mb-6">
                 {externalAuditors.map((auditor) => (
@@ -599,35 +607,37 @@ export default function App() {
 
             {selectedAuditor && (
               <div className="space-y-4 animate-[fadeIn_0.2s_ease-out]">
-                <div className="space-y-1.5">
-                  <p className="text-xs text-gray-600 font-semibold font-mono tracking-wider">Auditor Private Key</p>
+                <InputGroup>
+                  <FieldLabel>Auditor Private Key</FieldLabel>
                   <textarea
                     value={privateKeyInput}
                     onChange={(e) => setPrivateKeyInput(e.target.value)}
-                    className="w-full border border-gray-200 bg-white rounded-xl p-3 text-xs font-mono h-28 focus:border-black focus:outline-none text-gray-800 custom-scrollbar"
+                    className="w-full border border-gray-250 bg-white rounded-xl p-3 text-xs font-mono h-28 focus:border-blue-500 focus:outline-none text-gray-800 custom-scrollbar"
                     placeholder="-----BEGIN PRIVATE KEY-----&#10;..."
                   />
-                </div>
-                <button
+                </InputGroup>
+                <Button
+                  variant="primary"
                   onClick={handleExternalContinue}
-                  className="w-full bg-black hover:bg-gray-900 text-white font-medium py-3 rounded-xl transition cursor-pointer"
+                  className="w-full py-3"
                 >
                   Continue
-                </button>
+                </Button>
               </div>
             )}
 
-            <button
+            <Button
+              variant="ghost"
               onClick={() => {
                 setSelectedAuditor(null);
                 setPrivateKeyInput("");
                 authLogout().then(() => updateRoleState(null));
               }}
-              className="mt-6 w-full text-center text-xs text-gray-500 hover:text-gray-800 transition cursor-pointer font-medium"
+              className="mt-6 w-full text-center text-xs text-gray-500 hover:text-gray-800 transition font-medium"
             >
               ← Logout
-            </button>
-          </div>
+            </Button>
+          </ContentCard>
           {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
       );
