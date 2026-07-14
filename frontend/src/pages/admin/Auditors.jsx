@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import CreateAuditorCard from "../../components/CreateAuditorCard";
 import useAuditors from "../../hooks/useAuditors";
-import { getAuditorLogs } from "../../services/auditorService";
+import { downloadAuditorLogsPdf, getAuditorLogs } from "../../services/auditorService";
 import {
   PageHeader,
   ContentCard,
@@ -49,6 +49,7 @@ export default function Auditors({ showToast }) {
 
   // Action states for table items
   const [actionId, setActionId] = useState(null);
+  const [downloadingLogsId, setDownloadingLogsId] = useState(null);
 
   const handleOpenDetails = (auditor) => {
     setSelectedAuditor(auditor);
@@ -119,6 +120,27 @@ export default function Auditors({ showToast }) {
       showToast?.("Failed to fetch auditor search logs", "error");
     } finally {
       setLoadingLogs(false);
+    }
+  };
+
+  const handleDownloadLogsPdf = async (auditor) => {
+    try {
+      setDownloadingLogsId(auditor.id);
+      const blobData = await downloadAuditorLogsPdf(auditor.id);
+      const url = window.URL.createObjectURL(new Blob([blobData]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `SecureMatch_Auditor_${auditor.name}_Logs.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      showToast?.("Auditor logs PDF downloaded", "success");
+    } catch (err) {
+      console.error(err);
+      showToast?.(err.message || "Failed to download auditor logs PDF", "error");
+    } finally {
+      setDownloadingLogsId(null);
     }
   };
 
@@ -228,6 +250,14 @@ export default function Auditors({ showToast }) {
                         className="px-2 py-1 text-2xs text-blue-600"
                       >
                         Logs
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleDownloadLogsPdf(auditor)}
+                        disabled={downloadingLogsId === auditor.id}
+                        className="px-2 py-1 text-2xs text-slate-700"
+                      >
+                        {downloadingLogsId === auditor.id ? "Downloading..." : "Logs PDF"}
                       </Button>
                       <Button
                         variant="secondary"

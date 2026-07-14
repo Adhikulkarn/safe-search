@@ -158,6 +158,15 @@ class RBACTests(TestCase):
         self.assert_forbidden(self.external_auditor, "get", url)
         self.assert_forbidden(self.read_only_analyst, "get", url)
 
+    def test_download_auditor_logs_pdf_permissions(self):
+        url = f"/api/auditor/{self.test_auditor.id}/logs/download/"
+        self.assert_allowed(self.super_admin, "get", url)
+        self.assert_allowed(self.compliance_officer, "get", url)
+
+        self.assert_forbidden(self.internal_analyst, "get", url)
+        self.assert_forbidden(self.external_auditor, "get", url)
+        self.assert_forbidden(self.read_only_analyst, "get", url)
+
     # 9. Internal Metrics
     def test_internal_metrics_permissions(self):
         url = "/api/metrics/internal/"
@@ -586,6 +595,5 @@ class RESTfulAuditorTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response['Content-Type'], 'application/pdf')
-
 
 

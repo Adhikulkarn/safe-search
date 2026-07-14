@@ -23,6 +23,17 @@ export async function getAuditorLogs(auditorId) {
   }
 }
 
+export async function downloadAuditorLogsPdf(auditorId) {
+  try {
+    const res = await api.get(`/api/auditor/${auditorId}/logs/download/`, {
+      responseType: "blob",
+    });
+    return res.data;
+  } catch (err) {
+    throw handleApiError(err);
+  }
+}
+
 // Export new RESTful methods as well
 export const getAuditors = restfulAuditor.getAuditors;
 export const getAuditor = restfulAuditor.getAuditor;

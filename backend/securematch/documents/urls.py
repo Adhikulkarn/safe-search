@@ -6,6 +6,7 @@ from .views import (
     RotateAuditorKeyView,
     VerifyAuditorCredentialsView,
     AuditorLogsView,
+    DownloadAuditorLogsPdfView,
     InternalMetricsView,
     ExternalMetricsView,
     CreateAuditorView,
@@ -29,6 +30,7 @@ urlpatterns = [
     path("auditor/verify/", VerifyAuditorCredentialsView.as_view()),
     path("auditor/rotate-key/", RotateAuditorKeyView.as_view()),
     path("auditor/<int:auditor_id>/logs/", AuditorLogsView.as_view()),
+    path("auditor/<int:auditor_id>/logs/download/", DownloadAuditorLogsPdfView.as_view()),
     path("metrics/internal/", InternalMetricsView.as_view()),
     path("metrics/external/", ExternalMetricsView.as_view()),
     path("auditor/create/", CreateAuditorView.as_view()),
@@ -44,5 +46,4 @@ urlpatterns = [
     path("auditors/<int:id>/rotate-key/", AuditorRotateKeyPathView.as_view()),
     path("auditors/<int:id>/credentials/", AuditorCredentialsPathView.as_view()),
 ]
-
 

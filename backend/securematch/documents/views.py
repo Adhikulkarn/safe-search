@@ -52,6 +52,9 @@ from documents.services.key_service import (
 from documents.services.credential_service import (
     generate_credential_pdf,
 )
+from documents.services.log_export_service import (
+    generate_auditor_logs_pdf,
+)
 
 MAX_EXTERNAL_RESULTS = 50
 MAX_INTERNAL_RESULTS = 50
@@ -466,6 +469,30 @@ class AuditorLogsView(APIView):
             ),
             status=status.HTTP_200_OK
         )
+
+
+class DownloadAuditorLogsPdfView(APIView):
+    permission_classes = [IsAuthenticated, IsSuperAdministrator | IsComplianceOfficer]
+
+    def get(self, request, auditor_id):
+        from django.http import HttpResponse
+
+        try:
+            auditor = Auditor.objects.get(id=auditor_id)
+        except Auditor.DoesNotExist:
+            return Response(
+                error_response("AUDITOR_NOT_FOUND", "Auditor not found"),
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        logs = ExternalSearchAudit.objects.filter(auditor=auditor)[:100]
+        pdf_bytes = generate_auditor_logs_pdf(auditor, logs)
+
+        response = HttpResponse(pdf_bytes, content_type="application/pdf")
+        response["Content-Disposition"] = (
+            f'attachment; filename="auditor_{auditor.id}_logs.pdf"'
+        )
+        return response
     
 class InternalMetricsView(APIView):
     permission_classes = [IsAuthenticated, IsSuperAdministrator | IsComplianceOfficer]
@@ -1174,4 +1201,3 @@ class AuditorStatusUpdateView(APIView):
             ),
             status=status.HTTP_200_OK
         )
-
