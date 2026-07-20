@@ -29,8 +29,6 @@ DEBUG = os.getenv("DEBUG") == "True"
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", ".onrender.com"]
 
-CSRF_TRUSTED_ORIGINS = ["https://*.onrender.com"]
-
 # --------------------------------------------------
 # Application Definition
 # --------------------------------------------------
@@ -153,14 +151,31 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # CORS Configuration
 # --------------------------------------------------
 
-CORS_ALLOWED_ORIGINS = [
+def _split_env_list(name: str) -> list[str]:
+    raw = os.getenv(name, "")
+    return [item.strip() for item in raw.split(",") if item.strip()]
+
+
+DEFAULT_CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:5173",
+    "http://127.0.0.1:5173",
     "https://safe-search-neon.vercel.app",
 ]
 
+CORS_ALLOWED_ORIGINS = DEFAULT_CORS_ALLOWED_ORIGINS + _split_env_list("CORS_ALLOWED_ORIGINS_EXTRA")
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.vercel\.app$",
+]
+
 CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.onrender.com",
+    "https://*.vercel.app",
+] + _split_env_list("CSRF_TRUSTED_ORIGINS_EXTRA")
 
 # --------------------------------------------------
 # Django REST Framework (Rate Limiting)
