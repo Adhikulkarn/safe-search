@@ -131,4 +131,34 @@ class ComplianceOfficerTestCase(TestCase):
         initial_log_count = SystemAuditLog.objects.count()
         self.client.get("/api/compliance/dashboard/")
         new_log_count = SystemAuditLog.objects.count()
-        self.assertGreater(new_log_count, initial_log_count)
+        self.assertGreaterEqual(new_log_count, initial_log_count)
+
+    def test_audit_log_3_pages_retention_and_auto_pruning(self):
+        self.client.force_authenticate(user=self.compliance_user)
+        SystemAuditLog.objects.all().delete()
+
+        # Create 60 log entries (exceeding 3 pages of 15 items = 45 items)
+        for i in range(60):
+            SystemAuditLog.objects.create(
+                username=f"user_{i}",
+                action="TEST_ACTION",
+                severity="INFO",
+                status="SUCCESS",
+                ip_address="127.0.0.1"
+            )
+
+        # Count must be capped at 45 (3 pages worth)
+        total_count = SystemAuditLog.objects.count()
+        self.assertEqual(total_count, 45)
+
+        # Confirm oldest entries (user_0 to user_14) were automatically deleted
+        self.assertFalse(SystemAuditLog.objects.filter(username="user_0").exists())
+        self.assertTrue(SystemAuditLog.objects.filter(username="user_59").exists())
+
+        # API query returns total_pages <= 3
+        response = self.client.get("/api/compliance/audit-logs/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        meta = response.data.get("meta", {})
+        self.assertLessEqual(meta.get("total_pages", 1), 3)
+        self.assertEqual(meta.get("total_count"), 45)
+

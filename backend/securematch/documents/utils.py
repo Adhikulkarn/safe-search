@@ -110,6 +110,28 @@ def log_auditor_event(
     )
 
 
+MAX_AUDIT_LOG_PAGES = 3
+DEFAULT_AUDIT_LOG_PAGE_SIZE = 15
+MAX_AUDIT_LOG_CAPACITY = MAX_AUDIT_LOG_PAGES * DEFAULT_AUDIT_LOG_PAGE_SIZE  # 45 records
+
+
+def prune_old_audit_logs(max_capacity: int = MAX_AUDIT_LOG_CAPACITY):
+    """
+    Retains only up to `max_capacity` (3 pages worth of data, defaulting to 45 records)
+    in SystemAuditLog and automatically deletes older entries once it exceeds capacity.
+    """
+    from documents.models import SystemAuditLog
+
+    total = SystemAuditLog.objects.count()
+    if total > max_capacity:
+        excess = total - max_capacity
+        oldest_ids = list(
+            SystemAuditLog.objects.order_by("created_at", "id").values_list("id", flat=True)[:excess]
+        )
+        if oldest_ids:
+            SystemAuditLog.objects.filter(id__in=oldest_ids).delete()
+
+
 def log_compliance_event(
     request=None,
     action: str = "COMPLIANCE_ACCESS",
@@ -126,6 +148,7 @@ def log_compliance_event(
     """
     Logs every Compliance & Governance request to SystemAuditLog.
     Tracks: timestamp, user, action, IP, browser, endpoint, status, severity.
+    Automatically prunes logs exceeding 3 pages worth of data (45 items).
     """
     from documents.models import SystemAuditLog, Auditor
 
@@ -149,7 +172,7 @@ def log_compliance_event(
         else:
             organization = "SecureMatch Enterprise"
 
-    return SystemAuditLog.objects.create(
+    log_entry = SystemAuditLog.objects.create(
         user=current_user,
         username=username,
         auditor=auditor,
@@ -165,11 +188,15 @@ def log_compliance_event(
         metadata=metadata or {},
         execution_time_ms=execution_time_ms
     )
+    
+    prune_old_audit_logs()
+    return log_entry
 
 
 def seed_compliance_data_if_empty():
     """
     Ensures rich, realistic historical audit data is seeded for enterprise monitoring.
+    Caps initial seed data to exactly 3 pages worth of records (45 items).
     """
     from documents.models import SystemAuditLog, ExternalSearchAudit, Auditor
     from django.utils import timezone
@@ -177,6 +204,7 @@ def seed_compliance_data_if_empty():
     from datetime import timedelta
 
     if SystemAuditLog.objects.count() > 0:
+        prune_old_audit_logs(MAX_AUDIT_LOG_CAPACITY)
         return
 
     now = timezone.now()
@@ -198,8 +226,8 @@ def seed_compliance_data_if_empty():
     ]
 
     logs = []
-    # Seed 100 historical logs over the past 30 days
-    for i in range(100):
+    # Seed 3 pages worth of historical logs (45 items)
+    for i in range(MAX_AUDIT_LOG_CAPACITY):
         time_offset = timedelta(days=random.randint(0, 29), hours=random.randint(0, 23), minutes=random.randint(0, 59))
         ts = now - time_offset
         evt, sev, st, desc = random.choice(events_pool)
@@ -225,3 +253,4 @@ def seed_compliance_data_if_empty():
         logs.append(log)
 
     SystemAuditLog.objects.bulk_create(logs)
+    prune_old_audit_logs(MAX_AUDIT_LOG_CAPACITY)

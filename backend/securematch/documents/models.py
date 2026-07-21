@@ -247,3 +247,13 @@ class SystemAuditLog(models.Model):
         return (self.metadata or {}).get("keyword_hash", "-")
 
 
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=SystemAuditLog)
+def auto_prune_audit_logs_on_save(sender, instance, created, **kwargs):
+    if created:
+        from documents.utils import prune_old_audit_logs
+        prune_old_audit_logs()
+
+

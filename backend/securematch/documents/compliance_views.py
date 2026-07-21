@@ -15,7 +15,7 @@ from rest_framework.throttling import ScopedRateThrottle
 
 from accounts.permissions import IsComplianceOfficerOrAdmin
 from documents.models import SystemAuditLog, ExternalSearchAudit, Auditor, EncryptedDocument
-from documents.utils import success_response, error_response, log_compliance_event, seed_compliance_data_if_empty
+from documents.utils import success_response, error_response, log_compliance_event, seed_compliance_data_if_empty, prune_old_audit_logs
 from documents.services.log_export_service import generate_auditor_logs_pdf
 
 import openpyxl
@@ -165,9 +165,12 @@ class ComplianceAuditLogsView(BaseComplianceView):
     """
     GET /api/compliance/audit-logs/
     Paginated, filterable, and sortable view of system audit logs.
+    Loads all 3 pages worth of logs (up to 45 entries) upfront for instant client-side pagination.
     """
     def get(self, request):
         start_time = time.perf_counter()
+
+        prune_old_audit_logs()
 
         qs = SystemAuditLog.objects.all()
 
@@ -224,23 +227,20 @@ class ComplianceAuditLogsView(BaseComplianceView):
         else:
             qs = qs.order_by("-created_at")
 
-        # Pagination
+        # Load all 3 pages worth of matching logs upfront (up to 45 items)
+        all_items = list(qs[:45])
+        total_count = len(all_items)
+        page_size = 15
+        total_pages = max(1, (total_count + page_size - 1) // page_size)
+
         try:
             page = int(request.GET.get("page", 1))
-            page_size = int(request.GET.get("page_size", 15))
         except ValueError:
             page = 1
-            page_size = 15
-
-        total_count = qs.count()
-        total_pages = max(1, (total_count + page_size - 1) // page_size)
         page = min(max(1, page), total_pages)
 
-        start_idx = (page - 1) * page_size
-        end_idx = start_idx + page_size
-        items = qs[start_idx:end_idx]
-
-        results = [
+        # Build full results list (all 3 pages worth of data)
+        all_results = [
             {
                 "id": log.id,
                 "timestamp": log.created_at.strftime("%Y-%m-%d %H:%M:%S"),
@@ -257,8 +257,13 @@ class ComplianceAuditLogsView(BaseComplianceView):
                 "execution_time_ms": log.execution_time_ms or 12.4,
                 "metadata": log.metadata or {},
             }
-            for log in items
+            for log in all_items
         ]
+
+        # Sliced items for current page
+        start_idx = (page - 1) * page_size
+        end_idx = start_idx + page_size
+        results = all_results[start_idx:end_idx]
 
         exec_ms = round((time.perf_counter() - start_time) * 1000, 2)
         log_compliance_event(request, action="AUDIT_LOGS_VIEW", execution_time_ms=exec_ms)
@@ -268,9 +273,16 @@ class ComplianceAuditLogsView(BaseComplianceView):
             "page": page,
             "page_size": page_size,
             "total_pages": total_pages,
+            "all_loaded": True,
         }
 
-        return Response(success_response(data={"results": results}, meta=meta), status=status.HTTP_200_OK)
+        return Response(
+            success_response(
+                data={"results": results, "all_results": all_results},
+                meta=meta
+            ),
+            status=status.HTTP_200_OK
+        )
 
 
 class ComplianceAuditorActivityView(BaseComplianceView):

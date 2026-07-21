@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import complianceService from "../services/complianceService";
 import { handleApiError } from "../utils/errorHandler";
 
@@ -7,7 +7,7 @@ export function useCompliance(showToast) {
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [metricsLoading, setMetricsLoading] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
-  const [auditLogs, setAuditLogs] = useState([]);
+  const [allAuditLogs, setAllAuditLogs] = useState([]);
   const [logMeta, setLogMeta] = useState({ page: 1, page_size: 15, total_count: 0, total_pages: 1 });
   const [auditorActivities, setAuditorActivities] = useState([]);
   const [metricsData, setMetricsData] = useState(null);
@@ -40,7 +40,7 @@ export function useCompliance(showToast) {
       if (res.status === "success" && res.data) {
         setDashboardData(res.data);
         if (res.data.recent_audit_logs) {
-          setAuditLogs(res.data.recent_audit_logs);
+          setAllAuditLogs(res.data.recent_audit_logs);
         }
       }
     } catch (err) {
@@ -59,10 +59,19 @@ export function useCompliance(showToast) {
       const activeFilters = { ...filters, ...customFilters };
       const res = await complianceService.getAuditLogs(activeFilters);
       if (res.status === "success" && res.data) {
-        setAuditLogs(res.data.results || []);
-        if (res.meta) {
-          setLogMeta(res.meta);
-        }
+        const fullLogs = res.data.all_results || res.data.results || [];
+        setAllAuditLogs(fullLogs);
+
+        const totalCount = res.meta?.total_count ?? fullLogs.length;
+        const pageSize = activeFilters.page_size || 15;
+        const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
+        setLogMeta({
+          page: activeFilters.page || 1,
+          page_size: pageSize,
+          total_count: totalCount,
+          total_pages: totalPages,
+        });
       }
     } catch (err) {
       console.error("Failed to load audit logs", err);
@@ -71,7 +80,30 @@ export function useCompliance(showToast) {
     } finally {
       setLoading(false);
     }
-  }, [filters, showToast]);
+  }, [showToast]);
+
+  // Compute current page items instantly from memory
+  const auditLogs = useMemo(() => {
+    const page = filters.page || 1;
+    const pageSize = filters.page_size || 15;
+    const start = (page - 1) * pageSize;
+    return allAuditLogs.slice(start, start + pageSize);
+  }, [allAuditLogs, filters.page, filters.page_size]);
+
+  // Compute pagination metadata dynamically from memory (or fallback to logMeta)
+  const computedLogMeta = useMemo(() => {
+    const totalCount = Math.max(allAuditLogs.length, logMeta.total_count || 0);
+    const pageSize = filters.page_size || 15;
+    const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+    const page = Math.min(Math.max(1, filters.page || 1), totalPages);
+
+    return {
+      page,
+      page_size: pageSize,
+      total_count: totalCount,
+      total_pages: totalPages,
+    };
+  }, [allAuditLogs.length, logMeta.total_count, filters.page, filters.page_size]);
 
   const fetchAuditorActivity = useCallback(async () => {
     try {
@@ -171,7 +203,22 @@ export function useCompliance(showToast) {
   };
 
   const updateFilters = (newFilters) => {
-    setFilters((prev) => ({ ...prev, ...newFilters, page: 1 }));
+    setFilters((prev) => {
+      const isOnlyPageChange = Object.keys(newFilters).length === 1 && Object.prototype.hasOwnProperty.call(newFilters, "page");
+
+      const updated = {
+        ...prev,
+        ...newFilters,
+        page: isOnlyPageChange ? newFilters.page : 1,
+      };
+
+      if (!isOnlyPageChange) {
+        // Search/filter criteria changed: load full dataset for new filter from backend
+        fetchAuditLogs({ ...updated, page: 1 });
+      }
+
+      return updated;
+    });
   };
 
   return {
@@ -180,7 +227,7 @@ export function useCompliance(showToast) {
     metricsLoading,
     dashboardData,
     auditLogs,
-    logMeta,
+    logMeta: computedLogMeta,
     auditorActivities,
     metricsData,
     reportsData,
@@ -203,3 +250,4 @@ export function useCompliance(showToast) {
 }
 
 export default useCompliance;
+

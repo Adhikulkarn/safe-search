@@ -43,7 +43,7 @@ export default function AuditLogsPage({ showToast }) {
     <div className="space-y-6 animate-[fadeIn_0.3s_ease-out]">
       <PageHeader
         title="Audit Log Monitoring Workspace"
-        subtitle="Complete Cryptographic Audit Trails, System Event Logs & Severity Tracking"
+        subtitle="Cryptographic Audit Trails & Event Logs (Auto-retains latest 3 pages of active logs)"
       />
 
       <ComplianceFilters
