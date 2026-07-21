@@ -34,7 +34,7 @@ export default function AdminLayout({ children, logout, navigate, currentPath })
             </div>
             <div className="text-left">
               <p className="font-bold text-sm sm:text-base text-gray-800 tracking-tight">
-                Encrypted Search
+                SecureMatch
               </p>
               <p className="text-[10px] text-gray-500 font-medium">
                 SSE/PEKS Protocol
@@ -42,7 +42,7 @@ export default function AdminLayout({ children, logout, navigate, currentPath })
             </div>
           </button>
 
-          <div className="hidden md:flex gap-2 items-center">
+          <div className="hidden lg:flex gap-1.5 items-center">
             {navItems.map((item) => (
               <TabButton
                 key={item.path}
@@ -53,7 +53,7 @@ export default function AdminLayout({ children, logout, navigate, currentPath })
               />
             ))}
 
-            <div className="h-5 w-[1px] bg-gray-200 mx-3"></div>
+            <div className="h-5 w-[1px] bg-gray-200 mx-2"></div>
 
             <Badge variant="blue" className="px-3 py-1.5">
               Super Administrator
@@ -61,7 +61,7 @@ export default function AdminLayout({ children, logout, navigate, currentPath })
 
             <button
               onClick={logout}
-              className="text-xs text-slate-500 hover:text-rose-600 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition duration-150 cursor-pointer font-medium"
+              className="text-xs text-slate-500 hover:text-rose-600 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition duration-150 cursor-pointer font-medium ml-1"
               type="button"
             >
               Logout
@@ -69,7 +69,7 @@ export default function AdminLayout({ children, logout, navigate, currentPath })
           </div>
 
           <button
-            className="md:hidden text-slate-500 hover:text-slate-900 p-2 rounded-lg hover:bg-slate-100"
+            className="lg:hidden text-slate-500 hover:text-slate-900 p-2 rounded-lg hover:bg-slate-100 cursor-pointer"
             onClick={() => setMenuOpen(!menuOpen)}
             type="button"
             aria-label="Toggle menu"
@@ -87,7 +87,7 @@ export default function AdminLayout({ children, logout, navigate, currentPath })
         </div>
 
         {menuOpen && (
-          <div className="md:hidden px-4 pb-4 pt-2 space-y-2 bg-white border-t border-gray-100 shadow-md animate-[fadeIn_0.2s_ease-out]">
+          <div className="lg:hidden px-4 pb-4 pt-2 space-y-2 bg-white border-t border-gray-100 shadow-md animate-[fadeIn_0.2s_ease-out]">
             {navItems.map((item) => (
               <MobileTabButton
                 key={item.path}
@@ -123,7 +123,7 @@ function TabButton({ active, onClick, label, icon }) {
   return (
     <button
       onClick={onClick}
-      className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition duration-200 cursor-pointer flex items-center gap-2 ${
+      className={`px-3 py-2 rounded-xl text-xs font-medium transition duration-200 cursor-pointer flex items-center gap-1.5 ${
         active
           ? "bg-slate-900 text-white border border-slate-900 shadow-sm font-semibold"
           : "text-slate-600 hover:text-slate-900 border border-transparent hover:bg-slate-100"

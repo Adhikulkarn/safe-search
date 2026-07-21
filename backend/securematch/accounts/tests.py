@@ -109,17 +109,12 @@ class AccountsRBACTests(TestCase):
                     "fullName": "Asha Patel",
                     "role": Roles.INTERNAL_ANALYST,
                 },
-                {
-                    "id": compliance.id,
-                    "username": "compliance_user",
-                    "fullName": "Mira Rao",
-                    "role": Roles.COMPLIANCE_OFFICER,
-                },
             ],
         )
 
         self.assertNotIn(admin.id, [entry["id"] for entry in response.data["data"]])
         self.assertNotIn(auditor.id, [entry["id"] for entry in response.data["data"]])
+        self.assertNotIn(compliance.id, [entry["id"] for entry in response.data["data"]])
         self.assertNotIn(disabled_user.id, [entry["id"] for entry in response.data["data"]])
 
     def test_list_users_as_administrator_allowed(self):

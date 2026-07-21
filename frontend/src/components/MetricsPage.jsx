@@ -27,6 +27,7 @@ export default function MetricsPage({ role, showToast, autoRefreshMs = 15000 }) 
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
 
   // Key rotation display state
   const [rotatedKeyInfo, setRotatedKeyInfo] = useState(null);
@@ -53,9 +54,18 @@ export default function MetricsPage({ role, showToast, autoRefreshMs = 15000 }) 
       setLastUpdated(new Date());
     } catch (err) {
       console.error(err);
-      setError("Failed to load metrics");
+      const status = err?.response?.status;
+      if (status === 403) {
+        setError("You do not have permission to view these metrics.");
+        setAutoRefreshEnabled(false);
+      } else {
+        setError("Failed to load metrics");
+      }
       if (!silent) {
-        showToast?.("Failed to fetch system metrics", "error");
+        showToast?.(
+          status === 403 ? "Access denied for system metrics" : "Failed to fetch system metrics",
+          "error"
+        );
       }
     } finally {
       if (!silent) {
@@ -69,7 +79,7 @@ export default function MetricsPage({ role, showToast, autoRefreshMs = 15000 }) 
   }, [fetchMetrics]);
 
   useEffect(() => {
-    if (!autoRefreshMs || autoRefreshMs <= 0) {
+    if (!autoRefreshEnabled || !autoRefreshMs || autoRefreshMs <= 0) {
       return undefined;
     }
 
@@ -78,7 +88,7 @@ export default function MetricsPage({ role, showToast, autoRefreshMs = 15000 }) 
     }, autoRefreshMs);
 
     return () => window.clearInterval(intervalId);
-  }, [autoRefreshMs, fetchMetrics]);
+  }, [autoRefreshEnabled, autoRefreshMs, fetchMetrics]);
 
   useEffect(() => {
     if (!isInternal) {

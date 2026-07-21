@@ -245,18 +245,10 @@ export default function App() {
       setLoggingIn(true);
       const res = await authLogin(selectedInternalUser.username, passwordInput);
       if (res.success) {
-        const allowedRoles = [Roles.INTERNAL_ANALYST, Roles.COMPLIANCE_OFFICER, Roles.READ_ONLY_ANALYST];
+        const allowedRoles = [Roles.INTERNAL_ANALYST];
         if (!hasAnyRole(res.user, allowedRoles)) {
-          showToast("Access denied: This portal is for internal operational teams only", "error");
+          showToast("Access denied: This portal is for Internal Analyst accounts only", "error");
           await authLogout();
-          return;
-        }
-
-        if (hasRole(res.user, Roles.COMPLIANCE_OFFICER)) {
-          updateRoleState({ type: "compliance" });
-          showToast("Logged in to Compliance Officer Portal", "success");
-          setPasswordInput("");
-          navigate("/compliance");
           return;
         }
 

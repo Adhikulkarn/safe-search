@@ -173,11 +173,11 @@ class RBACTests(TestCase):
     def test_internal_metrics_permissions(self):
         url = "/api/metrics/internal/"
         self.assert_allowed(self.super_admin, "get", url)
+        self.assert_allowed(self.internal_analyst, "get", url)
         self.assert_allowed(self.compliance_officer, "get", url)
+        self.assert_allowed(self.read_only_analyst, "get", url)
         
-        self.assert_forbidden(self.internal_analyst, "get", url)
         self.assert_forbidden(self.external_auditor, "get", url)
-        self.assert_forbidden(self.read_only_analyst, "get", url)
 
     # 10. External Metrics
     def test_external_metrics_permissions(self):

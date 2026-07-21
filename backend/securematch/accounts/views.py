@@ -132,7 +132,7 @@ class InternalIdentityDirectoryView(APIView):
 
     def get(self, request, *args, **kwargs):
         users = (
-            User.objects.filter(is_active=True, groups__name__in=Roles.internal_roles())
+            User.objects.filter(is_active=True, groups__name=Roles.INTERNAL_ANALYST)
             .distinct()
             .order_by("first_name", "last_name", "username")
         )

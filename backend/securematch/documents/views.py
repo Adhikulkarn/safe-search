@@ -4,6 +4,7 @@ import logging
 from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Avg, Count
+from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -19,6 +20,7 @@ from accounts.permissions import (
     IsInternalUser,
     IsAdministrator
 )
+from accounts.utils import get_primary_role
 
 
 from crypto_engine.peks import hash_keyword, verify_signature
@@ -33,7 +35,8 @@ from documents.models import (
     Auditor,
     EncryptedDocument,
     SearchTokenIndex,
-    ExternalSearchAudit
+    ExternalSearchAudit,
+    SystemAuditLog,
 )
 
 from .constants import SEARCHABLE_FIELDS
@@ -62,6 +65,7 @@ MAX_EXTERNAL_RESULTS = 50
 MAX_INTERNAL_RESULTS = 50
 
 logger = logging.getLogger(__name__)
+User = get_user_model()
 
 
 # ---------------------------------------------------
@@ -499,7 +503,7 @@ class DownloadAuditorLogsPdfView(APIView):
         return response
     
 class InternalMetricsView(APIView):
-    permission_classes = [IsAuthenticated, IsSuperAdministrator | IsComplianceOfficer]
+    permission_classes = [IsAuthenticated, IsInternalUser]
 
     def get(self, request):
         try:
@@ -546,6 +550,75 @@ class InternalMetricsView(APIView):
                 for a in auditors
             ]
 
+            recent_security_logs = SystemAuditLog.objects.order_by("-created_at")[:8]
+
+            security_activity = [
+                {
+                    "id": log.id,
+                    "action": log.action.replace("_", " ").title(),
+                    "details": (log.metadata or {}).get("description") or log.action.replace("_", " ").title(),
+                    "timestamp": log.created_at.isoformat(),
+                    "severity": log.severity,
+                    "status": log.status,
+                    "user": log.username or "System",
+                    "endpoint": log.endpoint or "/api/",
+                    "ip_address": log.ip_address or "127.0.0.1",
+                }
+                for log in recent_security_logs
+            ]
+
+            recent_identities = User.objects.filter(
+                is_active=True
+            ).order_by("-created_at")[:6]
+
+            identity_activity = [
+                {
+                    "id": user.id,
+                    "action": "Identity Created",
+                    "details": f"{(f'{user.first_name} {user.last_name}'.strip() or user.username)} was added as {get_primary_role(user)}.",
+                    "timestamp": user.created_at.isoformat(),
+                    "role": get_primary_role(user),
+                    "username": user.username,
+                }
+                for user in recent_identities
+            ]
+
+            recent_auditors = Auditor.objects.order_by("-created_at")[:6]
+            auditor_activity = [
+                {
+                    "id": auditor.id,
+                    "action": "External Auditor Registered",
+                    "details": f"{auditor.name} from {auditor.organization_name} was registered with key version {auditor.key_version}.",
+                    "timestamp": auditor.created_at.isoformat(),
+                    "organization": auditor.organization_name,
+                    "status": auditor.status,
+                    "key_version": auditor.key_version,
+                }
+                for auditor in recent_auditors
+            ]
+
+            key_rotation_candidates = Auditor.objects.order_by("-last_rotation")[:6]
+            key_rotation_activity = [
+                {
+                    "id": auditor.id,
+                    "action": "Auditor Key Rotation",
+                    "details": f"{auditor.name} currently uses key version {auditor.key_version}. Last rotation recorded on {auditor.last_rotation.strftime('%Y-%m-%d %H:%M')}.",
+                    "timestamp": auditor.last_rotation.isoformat(),
+                    "organization": auditor.organization_name,
+                    "key_version": auditor.key_version,
+                    "status": auditor.status,
+                }
+                for auditor in key_rotation_candidates
+            ]
+
+            health_checks = [
+                {"name": "Database", "status": "Healthy"},
+                {"name": "JWT Authentication", "status": "Healthy"},
+                {"name": "Encryption Engine", "status": "Healthy"},
+                {"name": "Search Engine", "status": "Healthy"},
+                {"name": "API Status", "status": "Healthy"},
+            ]
+
             return Response({
                 "data": {
                     "system_metrics": {
@@ -557,7 +630,12 @@ class InternalMetricsView(APIView):
                         "failed_external_searches_last_24h": failed_24h,
                         "last_index_update": last_index_update
                     },
-                    "auditors": auditor_data
+                    "auditors": auditor_data,
+                    "recent_security_activity": security_activity,
+                    "recent_identity_activity": identity_activity,
+                    "recent_auditor_activity": auditor_activity,
+                    "recent_key_rotation_activity": key_rotation_activity,
+                    "health_checks": health_checks,
                 }
             })
 

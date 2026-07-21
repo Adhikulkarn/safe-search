@@ -38,7 +38,7 @@ export default function Navbar({ activeTab, setActiveTab, role, logout }) {
           </div>
           <div>
             <p className="font-bold text-sm sm:text-base text-gray-800 tracking-tight">
-              Safe Search
+              SecureMatch
             </p>
             <p className="text-[10px] text-gray-500 font-medium">
               SSE/PEKS Protocol
@@ -47,7 +47,7 @@ export default function Navbar({ activeTab, setActiveTab, role, logout }) {
         </div>
 
         {/* DESKTOP MENU */}
-        <div className="hidden md:flex gap-2 items-center">
+        <div className="hidden lg:flex gap-1.5 items-center">
           {isInternal && (
             <>
               <TabButton
@@ -56,7 +56,7 @@ export default function Navbar({ activeTab, setActiveTab, role, logout }) {
                 label="Encrypted Documents"
                 icon={
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 03-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                   </svg>
                 }
               />
@@ -95,7 +95,7 @@ export default function Navbar({ activeTab, setActiveTab, role, logout }) {
             }
           />
 
-          <div className="h-5 w-[1px] bg-gray-200 mx-3"></div>
+          <div className="h-5 w-[1px] bg-gray-200 mx-2"></div>
 
           <Badge variant={getRoleBadgeVariant(role)} className="px-3 py-1.5">
             {getRoleLabel(role)}
@@ -103,7 +103,7 @@ export default function Navbar({ activeTab, setActiveTab, role, logout }) {
 
           <button
             onClick={logout}
-            className="text-xs text-slate-500 hover:text-rose-600 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition duration-150 cursor-pointer flex items-center gap-1.5 font-medium"
+            className="text-xs text-slate-500 hover:text-rose-600 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition duration-150 cursor-pointer flex items-center gap-1.5 font-medium ml-1"
           >
             Logout
           </button>
@@ -111,7 +111,7 @@ export default function Navbar({ activeTab, setActiveTab, role, logout }) {
 
         {/* HAMBURGER BUTTON (Mobile Only) */}
         <button
-          className="md:hidden text-slate-500 hover:text-slate-900 p-2 rounded-lg hover:bg-slate-100"
+          className="lg:hidden text-slate-500 hover:text-slate-900 p-2 rounded-lg hover:bg-slate-100 cursor-pointer"
           onClick={() => setMenuOpen(!menuOpen)}
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,7 +126,7 @@ export default function Navbar({ activeTab, setActiveTab, role, logout }) {
 
       {/* MOBILE DROPDOWN */}
       {menuOpen && (
-        <div className="md:hidden px-4 pb-4 pt-2 space-y-2 bg-white border-t border-gray-100 shadow-md animate-[fadeIn_0.2s_ease-out]">
+        <div className="lg:hidden px-4 pb-4 pt-2 space-y-2 bg-white border-t border-gray-100 shadow-md animate-[fadeIn_0.2s_ease-out]">
           {isInternal && (
             <>
               <MobileTabButton
@@ -190,7 +190,7 @@ function TabButton({ active, onClick, label, icon }) {
   return (
     <button
       onClick={onClick}
-      className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition duration-200 cursor-pointer flex items-center gap-2 ${
+      className={`px-3 py-2 rounded-xl text-xs font-medium transition duration-200 cursor-pointer flex items-center gap-1.5 ${
         active
           ? "bg-slate-900 text-white border border-slate-900 shadow-sm font-semibold"
           : "text-slate-600 hover:text-slate-900 border border-transparent hover:bg-slate-100"
