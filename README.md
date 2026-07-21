@@ -12,44 +12,48 @@ It demonstrates two complementary search approaches:
 Repository layout
 -----------------
 
-- `backend/` — Django REST API (project: `securematch`) implementing storage, indexing, SSE search and external auditor APIs. See `backend/securematch/documents` for the app.
-  - Models: `EncryptedDocument`, `SearchTokenIndex`, `Auditor`, `ExternalSearchAudit` (`backend/securematch/documents/models.py`).
-  - Views / API endpoints: mounted under `/api/` via `backend/securematch/securematch/urls.py` and `backend/securematch/documents/urls.py`.
+- `backend/` — Django REST API (project: `securematch`) implementing storage, indexing, SSE search, PEKS external search, and Compliance Officer portal APIs.
+  - Models: `EncryptedDocument`, `SearchTokenIndex`, `Auditor`, `ExternalSearchAudit`, `SystemAuditLog` (`backend/securematch/documents/models.py`).
+  - Views / API endpoints: mounted under `/api/` via `backend/securematch/securematch/urls.py`, `documents/urls.py`, `accounts/urls.py`.
   - Crypto helpers (SSE & PEKS-like): `backend/securematch/crypto_engine/` (`sse.py`, `peks.py`, `key_manager.py`).
-  - Requirements: `backend/requirements.txt` and `backend/Dockerfile` for containerized deployment.
-
-- `frontend/` — React + Vite single-page app that talks to the backend. Main code in `frontend/src/` and services in `frontend/src/services/`.
+- `frontend/` — React + Vite single-page app with role-based dashboards (Administrator, Internal Analyst, Compliance Officer, External Auditor).
+- Documentation `.md` files — All project documentation files (`README.md`, `API_DOCUMENTATION.md`, `CURRENT_STATUS.md`, `authentication.md`, `filestructure.md`, `presentation.md`, `summary.md`, `AGENTS.md`) are placed at the repository root.
 
 Key backend API endpoints (path -> HTTP method)
 ----------------------------------------------
 All endpoints are mounted under the `/api/` prefix.
 
+- `auth/login/` -> POST : JWT authentication returning access & refresh tokens.
 - `upload/` -> POST : upload and AES-GCM encrypt a document and index searchable tokens.
 - `search/internal/` -> POST : internal SSE search (trapdoor/HMAC tokens) — returns decrypted results.
-- `search/external/` -> POST : external auditor search — verifies RSA signature, returns padded encrypted results and audit log data.
-- `auditor/create/` -> POST : create an auditor entry and return one-time private key.
-- `auditor/rotate-key/` -> POST : rotate/generate a new keypair for an auditor (key rotation support).
-- `auditor/<auditor_id>/logs/` -> GET : list recent external search audit entries for an auditor.
-- `auditor/<auditor_id>/delete/` -> DELETE : remove an auditor.
+- `search/external/` -> POST : external auditor search — verifies RSA signature, returns padded encrypted results.
+- `auditors/` -> GET / POST : list/create external auditor identities.
+- `auditors/<auditor_id>/rotate-key/` -> POST : rotate/generate a new keypair for an auditor.
+- `auditors/<auditor_id>/logs/` -> GET : list recent external search audit entries for an auditor.
+- `compliance/dashboard/` -> GET : compliance officer overview stats and recent event streams.
+- `compliance/audit-logs/` -> GET : system audit logs (auto-retains 3 pages / 45 items max; loads all 3 pages upfront for instant local pagination).
+- `compliance/export-logs/` -> GET : export compliance audit logs in CSV, Excel, or PDF format.
 - `metrics/internal/` -> GET : internal system metrics + auditor list.
-- `metrics/external/` -> GET : limited external metrics.
 
-Crypto & secrets
------------------
-- SSE: `backend/securematch/crypto_engine/sse.py` uses a master key (HKDF-derived) to produce an AES-256 key and an HMAC key. Data is encrypted with AES-GCM.
-- PEKS-like: `backend/securematch/crypto_engine/peks.py` provides deterministic keyword hashing and RSA signature verification used by auditors.
-- Secret: `MASTER_KEY` environment variable is required for `key_manager.load_master_key()` (expects a base64 value that decodes to 32 bytes).
+Compliance Audit Logs & Auto-Retention Policy
+---------------------------------------------
+- **Model**: `SystemAuditLog` records all system activities, compliance actions, authentication events, and governance checks.
+- **3-Page Capacity Limit**: The backend strictly caps audit log storage to 3 pages worth of data (45 records max, 15 items per page).
+- **Automated FIFO Deletion**: A Django `post_save` signal and helper `prune_old_audit_logs()` automatically delete the oldest records as soon as total logs exceed 45.
+- **Upfront Loading**: `GET /api/compliance/audit-logs/` returns all 3 pages worth of data (45 items) in the initial response payload (`all_results`), allowing instant 0ms client-side page switching ("Next" / "Previous").
 
 Database models
 ---------------
-- `EncryptedDocument` — stores encrypted blob (nonce + ciphertext).
+- `EncryptedDocument` — stores encrypted blob (nonce + ciphertext + AES-GCM metadata).
 - `SearchTokenIndex` — stores internal HMAC tokens and external deterministic hashes mapping to documents.
-- `Auditor` — stores auditor metadata and public key; supports key rotation.
-- `ExternalSearchAudit` — records each external search request outcome and timings.
+- `Auditor` — stores auditor metadata, public key, and active key version.
+- `ExternalSearchAudit` — records each external search request outcome, timings, and RSA signature verification results.
+- `SystemAuditLog` — records system activity, user/IP metadata, endpoint, execution status, and severity (auto-pruned to 45 records).
 
 Frontend integration
 --------------------
-- The frontend uses `frontend/src/services/api.js` to centralize the backend base URL. By default it uses the configured base URL so all service modules (`uploadService`, `internalSearchService`, `externalSearchService`, `auditorService`) inherit it.
+- The frontend uses `frontend/src/services/api.js` to centralize the backend base URL.
+- Role-based views exist for **Administrator**, **Internal Analyst**, **Compliance Officer**, and **External Auditor**.
 - To run the frontend locally:
 
   ```bash
@@ -79,28 +83,23 @@ Running the backend (local)
 	export MASTER_KEY="<paste-the-generated-value>"
 	```
 
-3. Apply migrations and run:
+3. Apply migrations and run dev server / test suite:
 
 	```bash
+	cd backend/securematch
 	python manage.py migrate
+	python manage.py test documents.test_compliance
 	python manage.py runserver
 	```
 
-Docker (backend)
-----------------
-- Build and run with the provided `backend/Dockerfile`. Ensure `MASTER_KEY` is injected into the container environment.
+Root Documentation Files
+------------------------
+- `README.md` — Main project overview, architecture, quickstart, and deployment guide.
+- `AGENTS.md` — Developer/agent instructions, testing gotchas, and repository layout.
+- `API_DOCUMENTATION.md` — Full API reference for Auth, Documents, Auditors, and Compliance endpoints.
+- `CURRENT_STATUS.md` — Phase-by-phase implementation matrix and system readiness status.
+- `authentication.md` — Deep dive into JWT authentication, RBAC, and PEKS RSA signature verification.
+- `filestructure.md` — Comprehensive directory structure and file layout documentation.
+- `presentation.md` — Executive presentation document, slide breakdown, and architecture notes.
+- `summary.md` — Complete system design overview and technical summary.
 
-Notes & next steps
-------------------
-- Consider moving the frontend base URL into environment variables (`VITE_API_BASE_URL`) for easier configuration between dev/staging/production.
-- The implementation is a reference/demo and not a production-ready hardened system — review key management, authentication, and operational security before production use.
-
-Where to look in the codebase
-----------------------------
-- Backend entrypoints: `backend/securematch/securematch/urls.py` and `backend/securematch/documents/urls.py`.
-- Core search & crypto: `backend/securematch/documents/views.py`, `backend/securematch/crypto_engine/`.
-- Frontend code & services: `frontend/src/` and `frontend/src/services/`.
-
-If you want, I can:
-- Replace the hardcoded API base with a `VITE_API_BASE_URL` env var and update the README with instructions for using it.
-- Add simple setup scripts to automate env generation and bootstrapping.

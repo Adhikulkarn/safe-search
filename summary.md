@@ -27,11 +27,16 @@ The repo is best understood as a reference implementation or academic/prototype 
   - React 19 + Vite SPA
   - Tailwind CSS v4 enabled through Vite plugin
   - UI code in `frontend/src/`
-- Root files
-  - `README.md`: high-level project description and setup notes
+- Root Documentation Files
+  - `README.md`: high-level project description, setup notes, and architecture
+  - `AGENTS.md`: agent and developer guidelines, gotchas, testing, and repository notes
+  - `API_DOCUMENTATION.md`: comprehensive REST API reference
+  - `CURRENT_STATUS.md`: phase-by-phase feature status and capabilities matrix
+  - `authentication.md`: detailed documentation of JWT auth, RBAC, and PEKS RSA signatures
+  - `filestructure.md`: complete file directory map and repository tree
+  - `presentation.md`: presentation deck and executive overview
+  - `summary.md`: system architecture summary and documentation
   - `render.yaml`: Render deployment definition for backend
-  - `url endpoints`: quick local API reference
-  - `HDFC`, `ICICI`, `IDFC`, `LIC`: standalone private key files used as sample auditor credentials or test assets
 
 ## Product Purpose
 

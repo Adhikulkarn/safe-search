@@ -8,9 +8,16 @@ This document provides a comprehensive overview of the `safe-search` project fil
 
 ```text
 safe-search/
+├── AGENTS.md
+├── API_DOCUMENTATION.md
+├── authentication.md
+├── CURRENT_STATUS.md
+├── filestructure.md
+├── presentation.md
+├── README.md
+├── summary.md
+├── render.yaml
 ├── backend/
-│   ├── docs/
-│   │   └── API_DOCUMENTATION.md
 │   ├── securematch/
 │   │   ├── accounts/
 │   │   │   ├── api/
@@ -48,20 +55,39 @@ safe-search/
 │   │   │   └── views.py
 │   │   ├── documents/
 │   │   │   ├── migrations/
-│   │   │   │   ├── 0001_initial.py
-│   │   │   │   ├── 0002_auditor.py
-│   │   │   │   ├── 0003_searchtokenindex_external_token.py
-│   │   │   │   ├── 0004_externalsearchaudit.py
-│   │   │   │   ├── 0005_alter_externalsearchaudit_options_and_more.py
-│   │   │   │   ├── 0006_alter_auditor_options_and_more.py
-│   │   │   │   ├── 0007_auditor_designation_auditor_email_auditor_phone_and_more.py
-│   │   │   │   └── __init__.py
 │   │   │   ├── services/
 │   │   │   │   ├── __init__.py
 │   │   │   │   ├── auditor_service.py
 │   │   │   │   ├── credential_service.py
 │   │   │   │   ├── key_service.py
 │   │   │   │   └── log_export_service.py
+│   │   │   ├── compliance_views.py
+│   │   │   ├── test_compliance.py
+│   │   │   ├── __init__.py
+│   │   │   ├── admin.py
+│   │   │   ├── apps.py
+│   │   │   ├── constants.py
+│   │   │   ├── models.py
+│   │   │   ├── pdf_generator.py
+│   │   │   ├── serializers.py
+│   │   │   ├── tests.py
+│   │   │   ├── urls.py
+│   │   │   ├── utils.py
+│   │   │   └── views.py
+│   │   ├── securematch/
+│   │   │   ├── __init__.py
+│   │   │   ├── asgi.py
+│   │   │   ├── settings.py
+│   │   │   ├── urls.py
+│   │   │   └── wsgi.py
+│   │   ├── .gitignore
+│   │   └── manage.py
+│   ├── .dockerignore
+│   ├── .env
+│   ├── Dockerfile
+│   └── requirements.txt
+├── frontend/
+```�   │   │   └── log_export_service.py
 │   │   │   ├── __init__.py
 │   │   │   ├── admin.py
 │   │   │   ├── apps.py

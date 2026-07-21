@@ -146,6 +146,13 @@ Roles are derived from the user's primary Django group. Superusers resolve to `A
 | DELETE | `/api/auditors/<id>/` | `AuditorDetailView` | Yes | Administrator |
 | POST | `/api/auditors/<id>/rotate-key/` | `AuditorRotateKeyPathView` | Yes | Administrator |
 | GET | `/api/auditors/<id>/credentials/` | `AuditorCredentialsPathView` | Yes | Administrator |
+| GET | `/api/compliance/dashboard/` | `ComplianceDashboardView` | Yes | Compliance Officer or Administrator |
+| GET | `/api/compliance/audit-logs/` | `ComplianceAuditLogsView` | Yes | Compliance Officer or Administrator |
+| GET | `/api/compliance/auditor-activity/` | `ComplianceAuditorActivityView` | Yes | Compliance Officer or Administrator |
+| GET | `/api/compliance/metrics/` | `ComplianceMetricsView` | Yes | Compliance Officer or Administrator |
+| GET | `/api/compliance/reports/` | `ComplianceReportsView` | Yes | Compliance Officer or Administrator |
+| GET | `/api/compliance/system-health/` | `ComplianceSystemHealthView` | Yes | Compliance Officer or Administrator |
+| GET | `/api/compliance/export-logs/` | `ComplianceExportLogsView` | Yes | Compliance Officer or Administrator |
 
 ## Endpoint Details
 
