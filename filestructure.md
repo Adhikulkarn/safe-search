@@ -87,7 +87,7 @@ safe-search/
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── frontend/
-```�   │   │   └── log_export_service.py
+`   │   │   └── log_export_service.py
 │   │   │   ├── __init__.py
 │   │   │   ├── admin.py
 │   │   │   ├── apps.py

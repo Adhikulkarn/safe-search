@@ -668,24 +668,6 @@ This is minimal but sufficient for current UI logging and alerts.
 
 This suggests the app either previously intended a storage-visualization tab or still has unfinished UI scope.
 
-### Frontend Strengths
-
-- Clear role-based UX separation
-- Good alignment between frontend actions and backend crypto model
-- Browser-side signing for external searches is a sensible demo choice
-- Auditor creation flow is understandable for non-technical reviewers
-- Mobile navigation and responsive layouts are present
-
-### Frontend Limitations and Risks
-
-- No real authentication or session model
-- Role selection is purely client-side
-- Hardcoded API base URL
-- `externalSearchService.js` hardcodes `auditor_id: 1` and is inconsistent with the richer live flow in `SearchPage.jsx`
-- Some service modules are not the ones actually used by the page components
-- UI logs simulate backend steps rather than reporting real server-side progress
-- Static `StoragePage` indicates dead or unfinished UI
-
 ## End-to-End Data Flow
 
 ### Internal Upload Flow
@@ -765,15 +747,6 @@ The project expects PostgreSQL with SSL required. The current settings indicate 
 - Models, crypto helpers, and APIs are separated into sensible modules.
 - External audit logging and metrics are useful touches for a demo focused on compliance/search visibility.
 
-### What Is Fragile
-
-- Security posture depends heavily on UI trust rather than backend access control.
-- There is no real user auth, no permission tiers, and no tenant isolation.
-- The active key rotation endpoint is permissive.
-- Duplicate class definitions and duplicate URL entries indicate code drift.
-- API response structure is not fully uniform across endpoints.
-- Test coverage is effectively missing.
-
 ### What Should Be Improved First
 
 If this project were to move beyond demo status, the highest-priority improvements would be:
@@ -784,15 +757,6 @@ If this project were to move beyond demo status, the highest-priority improvemen
 4. Clean up duplicate backend view definitions and route duplication.
 5. Add automated tests for crypto helpers, upload indexing, internal search, external signature verification, and auditor lifecycle flows.
 6. Clarify the threat model for the external search path and whether ciphertext return is acceptable.
-
-## Sensitive Data Observation
-
-The repository currently contains materials that should be treated as sensitive in a normal engineering environment:
-
-- `backend/.env` includes live-looking secrets and database credentials
-- root files such as `HDFC`, `ICICI`, `IDFC`, and `LIC` contain private keys
-
-For a real deployment or shared codebase, these should not live in version control.
 
 ## Final Assessment
 
